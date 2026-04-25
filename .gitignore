@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+
+# Local MediaWiki render workspaces and generated previews
+.ja-ucp-preview-work/
+tmp/
+
+# Logs and test output
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+coverage/
+.nyc_output/
+
+# TypeScript incremental state
+*.tsbuildinfo
+
+# Local environment and editor state
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Download cache used while assembling the bundled MediaWiki runtime.
+# Keep vendor/mediawiki-1.39.3 tracked; it is the offline runtime.
+vendor/downloads/
+
+# Local transfer/archive artifacts
+*.tgz
+*.tar
+*.tar.gz
+*.zip
