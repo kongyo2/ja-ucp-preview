@@ -110,7 +110,10 @@ jobs:
 
       - name: Pack (sanity check tarball size)
         run: |
-          npm pack --dry-run --json > pack.json
+          # --ignore-scripts so the prepack hook (npm run build) doesn't print
+          # tsup progress on stdout and corrupt the JSON we capture. Build
+          # already ran in the previous step.
+          npm pack --dry-run --json --ignore-scripts > pack.json
           node -e "const p=require('./pack.json'); const e=p[0]; console.log('files:', e.entryCount, 'unpacked:', e.unpackedSize, 'packed:', e.size);"
 
       - name: Publish to npm (dry run)
