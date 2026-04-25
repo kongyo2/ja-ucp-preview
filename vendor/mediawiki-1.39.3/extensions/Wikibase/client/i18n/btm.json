@@ -1,0 +1,25 @@
+{
+	"@metadata": {
+		"authors": [
+			"Simartampua",
+			"IHLubis"
+		]
+	},
+	"tooltip-t-wikibase": "Tautkon tu item repositori data na tarsambung",
+	"wikibase-comment-update": "{{WBREPONAME}} naiuba",
+	"wikibase-dataitem": "{{WBREPONAME}} item",
+	"wikibase-editlinks": "Pature tautan",
+	"wikibase-editlinkstitle": "Pature tautan antar saro",
+	"wikibase-linkitem-addlinks": "Tambai tautan nai",
+	"wikibase-linkitem-title": "Ilokotkon dohot alaman",
+	"wikibase-linkitem-linkpage": "Ilokotkon dohot alaman nai",
+	"wikibase-linkitem-selectlink": "Imuloima mamili situs dohot alaman nanget hamu naget ilokotkon tu alaman on.",
+	"wikibase-linkitem-input-site": "Saro:",
+	"wikibase-linkitem-input-page": "Alaman:",
+	"wikibase-rc-hide-wikidata": "$1 {{WBREPONAME}}",
+	"wikibase-rc-hide-wikidata-hide": "Bunion",
+	"wikibase-rc-hide-wikidata-show": "Patidaon",
+	"wikibase-rc-wikibase-edit-letter": "D",
+	"wikibase-rc-wikibase-edit-title": "{{WBREPONAME}} pature",
+	"wikibase-otherprojects": "I proyek nalain"
+}

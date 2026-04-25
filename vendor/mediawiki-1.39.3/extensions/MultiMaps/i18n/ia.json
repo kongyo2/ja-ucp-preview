@@ -1,0 +1,39 @@
+{
+	"@metadata": {
+		"authors": [
+			"McDutchie"
+		]
+	},
+	"multimaps-desc": "Permitte al usatores de monstrar cartas e datos de coordinatas usante plure servicio cartographic",
+	"multimaps-loading-map": "Cargamento del carta…",
+	"multimaps-mapservices-must-not-empty-array": "Le variabile \"$1\" non debe esser un matrice vacue",
+	"multimaps-undefined-service-for-layout": "Parametro de servicio non definite pro le disposition \"$1\" in $egMultiMaps_MapServices",
+	"multimaps-wrong-service-for-layout": "Pro le disposition \"$1\" es definite le servicio \"$2\" ma illo non existe in $egMultiMaps_MapServices",
+	"multimaps-layout-defined-for-layout": "Pro le disposition \"$1\" es definite un altere disposition \"$2\" in loco de un servicio in $egMultiMaps_MapServices",
+	"multimaps-leaflet-undefined-parameters-for-layer": "Le parametros \"source\" e \"attribution\" debe esser fornite pro le strato \"$1\" in $egMultiMaps_MapServices",
+	"multimaps-had-following-errors": "Durante le analyse syntactic, le parametros passate habeva le sequente errores:",
+	"multimaps-element-illegal-value": "pro le parametro \"$1\" ha essite specificate un valor invalide \"$2\". Le valores valide es: $3",
+	"multimaps-element-more-parameters": "Pro iste elemento de carta \"$1\" ha essite passate plus parametros que expectate:",
+	"multimaps-element-parameters-not-processed": "le sequente parametros non ha essite processate: $1",
+	"multimaps-circle-radius-not-defined": "pro le circulo debe esser definite un radio",
+	"multimaps-circle-wrong-number-parameters": "pro le circulo debe esser definite solmente duo parametros, le coordinatas del centro e le radio. Ma ha essite specificate $1 parametro{{PLURAL:$1||s}}",
+	"multimaps-marker-incorrect-icon": "Un nomine de file incorrecte \"$1\" ha essite fornite pro le icone de marcator.",
+	"multimaps-marker-incorrect-icon-url": "Un adresse URL incorrecte \"$1\" ha essite fornite pro le icone de marcator.",
+	"multimaps-marker-incorrect-icon-size": "Un dimension incorrecte \"$1\" ha essite fornite pro le icone de marcator \"$2\".",
+	"multimaps-marker-incorrect-icon-anchor": "Un ancora incorrecte \"$1\" ha essite fornite pro le icone de marcator \"$2\".",
+	"multimaps-marker-incorrect-shadow-file": "Un nomine de file incorrecte \"$1\" ha essite fornite pro le umbra del icone.",
+	"multimaps-marker-incorrect-shadow-url": "Un adresse URL incorrecte \"$1\" ha essite fornite pro le umbra del icone.",
+	"multimaps-marker-incorrect-shadow-size": "Un dimension incorrecte \"$1\" ha essite fornite pro le umbra de icone \"$2\".",
+	"multimaps-marker-incorrect-shadow-anchor": "Un ancora incorrecte \"$1\" ha essite fornite pro le umbra de icone \"$2\".",
+	"multimaps-passed-unavailable-service": "Le nomine de servicio \"$1\" non ha essite trovate in le lista de servicios disponibile ($2). Le servicio predefinite \"$3\" ha essite usate.",
+	"multimaps-square-wrong-number-points": "le coordinatas del quadrato debe continer solmente duo punctos, ma $1 puncto{{PLURAL:$1||s}} ha essite specificate",
+	"multimaps-unable-create-element": "Le elemento de carta \"$1\" non pote esser create",
+	"multimaps-unable-parse-coordinates": "impossibile processar le coordinatas geographic \"$1\"",
+	"multimaps-unable-parse-parameter": "impossibile processar le parametro \"$1\" con valor \"$2\"",
+	"multimaps-unable-parse-radius": "le radio del circulo debe esser un valor numeric, ma \"$1\" ha essite specificate",
+	"multimaps-unknown-class-for-service": "Le classe \"$1\" que es definite pro le servicio non pote esser trovate.",
+	"multimaps-unknown-parameter": "Parametro incognite: \"$1\"",
+	"multimaps-error-incorrect-class-for-service": "Le classe \"$1\" que es definite pro le servicio non pote esser usate.",
+	"multimaps-method-error-unknown-action": "$1: Action incognite",
+	"multimaps-method-error-unexpected-result": "$1: Un resultato inexpectate de un function"
+}

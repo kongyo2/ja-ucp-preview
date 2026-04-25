@@ -1,0 +1,29 @@
+{
+	"@metadata": {
+		"authors": [
+			"Zakaria Tunsung",
+			"Linus Konkor"
+		]
+	},
+	"babel": "Babel tontona duoro",
+	"babel-desc": "Paale a <code>#babel</code> Pɛsa tontnonne na bare otomatikal babel tontona daga kɔlɔm daa-yiibu ne a kpeɛõ na poɔ yeltuuri tampiletiri",
+	"babel-url": "Project:Babel",
+	"babel-footer-url": ":Gbulogbulo:Babel - Kɔkɔre ne o tontoneba",
+	"babel-autocreate-text-levels": "Tontoneba naŋ be gbuli ŋa poɔ wuli ka ba taa la dayeni $1 bambo ko kɔkɔre $2.",
+	"babel-autocreate-text-main": "Tontoneba naŋ be gbuli ŋa poɔ wuli la ba kɔkɔre $1 bambo.",
+	"babel-0": "A tontona ŋa taa la [[$1|aayi]] yɛŋ ne [[$2|$3]] (bee teɛrɛ o seɛ ne toɔrɔ nimizeere).",
+	"babel-1": "A tontona ŋa taa la [[$1|piiluu]] yɛŋ bambo ne [[$2|$3]].",
+	"babel-2": "A tontona ŋa taa la [[$1|zɛge zu fẽẽ]] yɛŋ bambo ne [[$2|$3]].",
+	"babel-3": "A tontona ŋa taa la [[$1|zanne do zu]] yɛŋ bambo ne [[$2|$3]].",
+	"babel-4": "A tontona ŋa taa la [[$1|dɔgebo deme peɛloo]] yɛŋ bambo ne [[$2|$3]].",
+	"babel-5": "A tontona ŋa taa la [[$1|karekyeeloŋ]] yɛŋ bambo ne [[$2|$3]].",
+	"babel-N": "A tontona ŋa taa la a [[$1|dɔgebo deme]] bambo ne [[$2|$3]].",
+	"babel-0-n": "A tontona ŋa ba [[$1|taa]] yɛŋ bambo ne [[$2|Bɔrfo]] (bee teɛ o seɛ ne toɔrɔ nimizeere).",
+	"babel-1-n": "A tontona ŋa taa la [[$1|piiluu]] yɛŋ bambo ne [[$2|Bɔrefɔ]].",
+	"babel-2-n": "A tontona ŋa taa la [[$1|zanne do zu]] yɛŋ bambo ne [[$2|Bɔrefɔ]].",
+	"babel-3-n": "A tontona ŋa taa la [[$1|zanne gaa tɔɔre]] yɛŋ bambo ne [[$2|Bɔrefɔ]].",
+	"babel-4-n": "A tontona ŋa taa la [[$1|dɔgebo deme peɛloo]] yɛŋ bambo ne [[$2|Bɔrefɔ]].",
+	"babel-5-n": "A tontona ŋa taa la [[$1|karekyeeloŋ]] yɛŋ bambo ne [[$2|Bɔrefɔ]].",
+	"babel-N-n": "A tontona ŋa taa la a [[$1|kɔkɔre dɔgebo]] bambo ko [[$2|Bɔrfo]].",
+	"babel-footer": "Tontoneba ne ba kɔkɔre"
+}

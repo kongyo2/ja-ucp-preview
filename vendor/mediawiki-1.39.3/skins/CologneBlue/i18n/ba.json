@@ -1,0 +1,29 @@
+{
+	"@metadata": {
+		"authors": [
+			"Assele",
+			"Haqmar",
+			"Sagan",
+			"Ләйсән",
+			"З. ӘЙЛЕ"
+		]
+	},
+	"skinname-cologneblue": "Кёльн һағышы",
+	"cologneblue-desc": "Форматлау аҙ булған еңел биҙәлеш тема.",
+	"qbfind": "Эҙләү",
+	"qbbrowse": "Байҡарға",
+	"qbedit": "Үҙгәртергә",
+	"qbpageoptions": "Был бит",
+	"qbmyoptions": "Биттәрем",
+	"faqpage": "Project:ЙБҺ",
+	"editthispage": "Был битте үҙгәртергә",
+	"create-this-page": "Был битте яһарға",
+	"deletethispage": "Был битте юйырға",
+	"undeletethispage": "Был битте ҡабат тергеҙергә",
+	"protectthispage": "Был битте һаҡларға",
+	"unprotectthispage": "Был биттең һаҡлауын үҙгәртергә",
+	"talkpage": "Был бит буйынса фекер алышырға",
+	"articlepage": "Мәҡәләне ҡарап сығырға",
+	"userpage": "Ҡатнашыусы битен ҡарап сығырға",
+	"projectpage": "Проект битен ҡарап сығырға"
+}

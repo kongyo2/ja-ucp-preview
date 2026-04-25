@@ -1,0 +1,18 @@
+{
+	"@metadata": {
+		"authors": [
+			"Bjh21",
+			"Chase me ladies, I'm the Cavalry",
+			"Felicilijonas",
+			"Pierpao",
+			"Robin Owain",
+			"Shirayuki",
+			"Piano1forte2",
+			"Reedy",
+			"Samthecrazyman"
+		]
+	},
+	"wikibase-error-deserialize-error": "Failed to deserialise data.",
+	"wikibase-error-serialize-error": "Failed to serialise data.",
+	"wikibase-client-data-bridge-license-heading": "Usage and licence"
+}

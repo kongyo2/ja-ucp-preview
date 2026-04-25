@@ -1,0 +1,40 @@
+{
+	"@metadata": {
+		"authors": [
+			"AntanO",
+			"Aswn",
+			"Balajijagadesh",
+			"ElangoRamanujam",
+			"Jayarathina",
+			"MinecraftAustralia",
+			"Rakeshonwiki",
+			"Shanmugamp7",
+			"Siddhan",
+			"கலைவாணன்",
+			"மதனாஹரன்",
+			"Fahimrazick",
+			"Matrix"
+		]
+	},
+	"wikibase-dataitem": "{{WBREPONAME}}உருப்படி",
+	"wikibase-editlinks": "தொடுப்புகளைத் தொகு",
+	"wikibase-editlinkstitle": "மொழியிடைத் தொடுப்புகளைத் தொகு",
+	"wikibase-addlinkstitle": "மொழியிடைத் தொடுப்புகளைத் தொகு",
+	"wikibase-linkitem-addlinks": "தொடுப்புகளைச் சேர்",
+	"wikibase-linkitem-title": "பக்கத்துடன் தொடு",
+	"wikibase-linkitem-linkpage": "பக்கத்துடன் தொடு",
+	"wikibase-linkitem-selectlink": "நீர் இப்பக்கத்துடன் தொடுக்க விரும்பும் ஒரு தளத்தையும் ஒரு பக்கத்தையும் தெரிவு செய்க",
+	"wikibase-linkitem-input-site": "மொழி:",
+	"wikibase-linkitem-input-page": "பக்கம்:",
+	"wikibase-rc-hide-wikidata": "$1 {{WBREPONAME}}",
+	"wikibase-rc-hide-wikidata-hide": "மறை",
+	"wikibase-rc-hide-wikidata-show": "காட்டு",
+	"wikibase-rc-show-wikidata-pref": "விக்கித்தரவு தொகுப்புகளை அண்மைய மாற்றங்களில் காண்பி",
+	"wikibase-rc-wikibase-edit-letter": "த",
+	"wikibase-rc-wikibase-edit-title": "{{WBREPONAME}} தொகுப்பு",
+	"wikibase-pageinfo-entity-usage-T": "தலைப்பு",
+	"wikibase-otherprojects": "பிற திட்டங்களில்",
+	"wikibase-sitelinks-sitename-columnheading": "மொழி",
+	"wikibase-sitelinks-link-columnheading": "இணைத்த கட்டுரை",
+	"connected-redirect-category": "{{WBREPONAME}}-இற்கு இணைக்கப்பட்டுள்ள வழிமாற்றுகள்"
+}

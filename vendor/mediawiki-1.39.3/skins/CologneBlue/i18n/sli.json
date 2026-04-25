@@ -1,0 +1,20 @@
+{
+	"@metadata": {
+		"authors": [
+			"Jonny84",
+			"Schläsinger",
+			"Äberlausitzer"
+		]
+	},
+	"qbfind": "Finda",
+	"qbedit": "Beoarbeeta",
+	"qbpageoptions": "Seitaoptionen",
+	"qbmyoptions": "Meine Seita",
+	"editthispage": "Seite beoarbeeta",
+	"create-this-page": "Seite erstalla",
+	"deletethispage": "Diese Seite läscha",
+	"talkpage": "Diskussion",
+	"articlepage": "Inhaltsseite oazeiga",
+	"userpage": "Nutzerseyte oazeiga",
+	"projectpage": "Projektseyte"
+}

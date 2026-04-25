@@ -1,0 +1,27 @@
+{
+	"@metadata": {
+		"authors": [
+			"Aandeginini",
+			"Nibi-zhimaaganish",
+			"Mashkawiziiwin"
+		]
+	},
+	"tooltip-t-wikibase": "Biiwaabiko-zagapijigan izhi-daangishin mamizhim-zhooniyaawigamig ayi-ii",
+	"wikibase-comment-update": "{{WBREPONAME}} gii-aanji'",
+	"wikibase-dataitem": "{{WBREPONAME}} ayi'ii",
+	"wikibase-editlinks": "Aanji' biiwaabiko-zagapijigan",
+	"wikibase-editlinkstitle": "Aanji' biiwaabiko-zagapijigan bakaan inwewin",
+	"wikibase-addlinkstitle": "Asigagindaaso aanikegamaa ondaashi-inwewin",
+	"wikibase-linkitem-addlinks": "Asigagindaaso biiwaabiko-zagapijigan",
+	"wikibase-linkitem-title": "Aanikegamaa biindig mazina'igans",
+	"wikibase-linkitem-linkpage": "Aanikegamaa biindig mazina'igans",
+	"wikibase-linkitem-selectlink": "Daga onaabam bezhig mazinaabikiwebinigan-mazina'igan gaye bezhig mazina'igans biindig aanikegamaa ayaa mazina'igans.",
+	"wikibase-linkitem-input-site": "Inwewin:",
+	"wikibase-linkitem-input-page": "Mazina'igans:",
+	"wikibase-rc-hide-wikidata": "$1 {{WBREPONAME}}",
+	"wikibase-rc-hide-wikidata-hide": "Gaadoon",
+	"wikibase-rc-hide-wikidata-show": "Naago'",
+	"wikibase-rc-wikibase-edit-letter": "A",
+	"wikibase-rc-wikibase-edit-title": "{{WBREPONAME}} aanji'",
+	"wikibase-otherprojects": "Biindig bakaan anokaajigan"
+}

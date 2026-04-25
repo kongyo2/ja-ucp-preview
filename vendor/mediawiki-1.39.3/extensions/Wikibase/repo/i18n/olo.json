@@ -1,0 +1,40 @@
+{
+	"@metadata": {
+		"authors": [
+			"Denö",
+			"Ilja.mos",
+			"Ladsgroup",
+			"Mashoi7",
+			"Ruppijeva"
+		]
+	},
+	"wikibase-entity-item": "elementu",
+	"wikibase-edit": "kohenda",
+	"wikibase-save": "tallenda",
+	"wikibase-cancel": "hylgiä",
+	"wikibase-add": "ližiä",
+	"wikibase-save-inprogress": "Tallendetah...",
+	"wikibase-entitytermsforlanguagelistview-language": "Kieli",
+	"wikibase-label-empty": "Nimie ei ole ližätty",
+	"wikibase-description-empty": "Kuvavustu ei ole ližätty",
+	"wikibase-sitelink-page-edit-placeholder": "sivu",
+	"wikibase-statementsection-statements": "Tovendus",
+	"wikibase-sitelinks-special": "Muut verkosivustot",
+	"wikibase-statementview-rank-normal": "Normuali listusijoitus",
+	"wikibase-statementview-references-counter": "$1 {{PLURAL:$1|lähteh|lähtehty}}",
+	"wikibase-itembytitle-lookup-site": "Saitu:",
+	"wikibase-itembytitle-lookup-page": "Sivu:",
+	"wikibase-itembytitle-submit": "Eči",
+	"wikibase-gotolinkedpage-lookup-site": "Saitu:",
+	"wikibase-gotolinkedpage-submit": "Mene",
+	"wikibase-itemdisambiguation-lookup-language": "Kielikoudu:",
+	"wikibase-itemdisambiguation-submit": "Eči",
+	"wikibase-newentity-language": "Kieli:",
+	"wikibase-modifyterm-language": "Kielikoudu:",
+	"wikibase-listdatatypes-wikibase-item-head": "Elementu",
+	"wikibase-listdatatypes-quantity-head": "Lugu",
+	"wikibase-listdatatypes-monolingualtext-head": "Yksikieline tekstu",
+	"wikibase-listdatatypes-multilingualtext-head": "Monikieline tekstu",
+	"wikibase-listdatatypes-url-head": "URL",
+	"datatypes-type-url": "URL"
+}

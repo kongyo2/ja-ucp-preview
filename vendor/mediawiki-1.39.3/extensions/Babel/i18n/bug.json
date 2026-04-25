@@ -1,0 +1,26 @@
+{
+	"@metadata": {
+		"authors": [
+			"Purodha",
+			"Rdwnnr"
+		]
+	},
+	"babel": "Imporomasi Babel pagguna",
+	"babel-footer-url": ":Katagori:Babel - Pagguna situruq basa",
+	"babel-0": "Pagguna iyaé [[$1|déqgaga]] paddissengenna ilaleng [[$2|$3]] (iyaréga napahangngi tapi marejjing laddeq).",
+	"babel-1": "Pagguna iyaé napunnai paddissengeng [[$2|$3]] iya [[$1|mabbiyasa]].",
+	"babel-2": "Pagguna iyaé napunnai paddissengeng [[$2|$3]] iya [[$1|mattengnga-tengnga]]",
+	"babel-3": "Pagguna iyaé napunnai paddissengeng ilaleng [[$2|$3]] iya [[$1|macca]].",
+	"babel-4": "Pagguna iyé napunnai paddissengeng [[$2|$3]] iya [[$1|pappada ugiq]].",
+	"babel-5": "Pagguna iyaé napunnai paddissengeng [[$2|$3]] iya [[$1|mappanré ada]].",
+	"babel-N": "Iyaé paggunaé [[$1|mabbérékkada]] ilaleng [[$2|$3]].",
+	"babel-0-n": "Pagguna iyaé [[$1|déqgaga]] paddissengenna ilaleng [[$2|basa Ugiq]] (iyaréga napahangngi tapi marejjing laddeq).",
+	"babel-1-n": "Pagguna iyaé napunnai paddissengeng [[$2|basa Ugi]] iya [[$1|mabbiyasa]].",
+	"babel-2-n": "Pagguna iyaé napunnai paddissengeng [[$2|basa Ugiq]] iya [[$1|mattengnga-tengnga]]",
+	"babel-3-n": "Pagguna iyaé napunnai paddissengeng [[$2|basa Ugiq]] iya [[$1|macca]].",
+	"babel-4-n": "Pagguna iyaé napunnai paddissengeng [[$2|basa Ugiq]] iya [[$1|pappada ugiq]].",
+	"babel-5-n": "Pagguna iyaé napunnai paddissengeng [[$2|basa Ugiq]] iya [[$1|mappanré ada]].",
+	"babel-N-n": "Iyaé paggunaé [[$1|mabbérékkada]] ilaleng [[$2|basa Ugiq]].",
+	"babel-template": "Accuwang:Pagguna $1",
+	"babel-footer": "ᨄᨁᨘᨊ ᨔᨗᨈᨘᨑᨘ ᨅᨔ"
+}

@@ -1,0 +1,9 @@
+{
+	"@metadata": {
+		"authors": [
+			"Milicevic01"
+		]
+	},
+	"logofunctions-desc": "Dodaje funkciju raščlanjivanja logotipa vikija",
+	"logofunctions-filenotexist": "Greška: [[:File:$1]] ne postoji."
+}

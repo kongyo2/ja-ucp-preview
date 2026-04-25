@@ -1,0 +1,13 @@
+{
+	"@metadata": {
+		"authors": [
+			"Toliño"
+		]
+	},
+	"dplforum-desc": "Extensión de foro baseada en DPL",
+	"dplforum-by": "por $1",
+	"dplforum-edited": "- Última edición",
+	"dplforum-never": "Nunca",
+	"dplforum-toofew": "Foro DPL: Moi poucas categorías!",
+	"dplforum-toomany": "Foro DPL: Demasiadas categorías!"
+}

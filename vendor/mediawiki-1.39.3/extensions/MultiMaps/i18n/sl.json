@@ -1,0 +1,39 @@
+{
+	"@metadata": {
+		"authors": [
+			"Eleassar"
+		]
+	},
+	"multimaps-desc": "Uporabnikom omogoča prikaz zemljevidov in usklajevanje podatkov z uporabo več kartografskih storitev",
+	"multimaps-loading-map": "Nalaganje zemljevida ...",
+	"multimaps-mapservices-must-not-empty-array": "Spremenljivka »$1« ne sme biti prazna matrika",
+	"multimaps-undefined-service-for-layout": "Nedefiniran parameter storitve za postavitev »$1« v $egMultiMaps_MapServices",
+	"multimaps-wrong-service-for-layout": "Za postavitev »$1« je določena storitev »$2«, vendar v $egMultiMaps_MapServices ne obstaja",
+	"multimaps-layout-defined-for-layout": "Za postavitev »$1« je določena druga postavitev »$2« namesto storitve v $egMultiMaps_MapServices",
+	"multimaps-leaflet-undefined-parameters-for-layer": "Za sloj »$1« v $egMultiMaps_MapServices je treba predložiti parametra »source« in »attribution«",
+	"multimaps-had-following-errors": "Pri razčlenjevanju posredovanih parametrov je prišlo do naslednjih napak:",
+	"multimaps-element-illegal-value": "Za parameter »$1« je bila predložena nedovoljena vrednost »$2«. Veljavne vrednosti so: $3",
+	"multimaps-element-more-parameters": "Za ta element zemljevida »$1« je bilo posredovanih več parametrov od pričakovanega:",
+	"multimaps-element-parameters-not-processed": "naslednji parametri niso bili obdelani: $1",
+	"multimaps-circle-radius-not-defined": "za krog mora biti določen polmer",
+	"multimaps-circle-wrong-number-parameters": "za krog je treba določiti samo dva parametra, koordinate središča in polmer. {{PLURAL:$1|Določen|Določena|Določeni|Določenih}} pa {{PLURAL:$1|je en parameter|sta $1 parametra|so $1 parametri|je $1 parametrov}}.",
+	"multimaps-marker-incorrect-icon": "Za ikono označevalca je bilo navedeno napačno datotečno ime »$1«.",
+	"multimaps-marker-incorrect-icon-url": "Za ikono označevalca je bil določen napačen URL »$1«.",
+	"multimaps-marker-incorrect-icon-size": "Za ikono označevalca »$2« je bila določena napačna velikost »$1«.",
+	"multimaps-marker-incorrect-icon-anchor": "Za ikono označevalca »$2« je bilo navedeno napačno sidro »$1«.",
+	"multimaps-marker-incorrect-shadow-file": "Za senco ikon je bilo navedeno napačno ime datoteke »$1«.",
+	"multimaps-marker-incorrect-shadow-url": "Za senco ikon je bil določen napačen URL »$1«.",
+	"multimaps-marker-incorrect-shadow-size": "Za senco ikon »$2« je bila določena napačna velikost »$1«.",
+	"multimaps-marker-incorrect-shadow-anchor": "Za senco ikon »$2« je bilo določeno napačno sidro »$1«.",
+	"multimaps-passed-unavailable-service": "Imena storitve »$1« ni bilo mogoče najti na seznamu razpoložljivih storitev ($2). Uporabljena je bila privzeta storitev »$3«.",
+	"multimaps-square-wrong-number-points": "koordinate kvadrata smejo vsebovati samo dve točki, vendar {{PLURAL:$1|je bila določena|sta bili določeni|so bile določene|je bilo določenih}} {{PLURAL:$1|ena točka|$1 točki|$1 točke|$1 točk}}",
+	"multimaps-unable-create-element": "Elementa zemljevida »$1« ni mogoče ustvariti",
+	"multimaps-unable-parse-coordinates": "geografskih koordinat »$1« ni mogoče razčleniti",
+	"multimaps-unable-parse-parameter": "parametra »$1« z vrednostjo »$2« ni bilo mogoče razčleniti",
+	"multimaps-unable-parse-radius": "polmer kroga mora biti številska vrednost, predloženo pa je bilo »$1«",
+	"multimaps-unknown-class-for-service": "Razreda »$1«, ki je določen za storitev, ni bilo mogoče najti.",
+	"multimaps-unknown-parameter": "Neznan parameter: »$1«",
+	"multimaps-error-incorrect-class-for-service": "Razreda »$1«, ki je določen za storitev, ni mogoče uporabiti.",
+	"multimaps-method-error-unknown-action": "$1: Neznano dejanje",
+	"multimaps-method-error-unexpected-result": "$1: Nepričakovan rezultat funkcije"
+}

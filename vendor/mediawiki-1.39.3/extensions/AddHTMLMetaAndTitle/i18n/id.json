@@ -1,0 +1,10 @@
+{
+	"@metadata": {
+		"authors": [
+			"Daud I.F. Argana",
+			"Penyuwangi"
+		]
+	},
+	"addhtmlmetaandtitle-desc": "Memungkinkan SEO (''search engine optimization'', pengoptimalan mesin pencarian) yang lebih mudah",
+	"addhtmlmetaandtitle-empty-attr": "Tanda &lt;seo&gt; harus berisi paling tidak satu atribut \"title\" atau \"metak(eywords)\" atau \"metad(escription)\" yang tidak kosong."
+}

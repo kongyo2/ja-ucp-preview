@@ -1,0 +1,523 @@
+__NOTOC__ __NOEDITSECTION__
+{{#tag:css|
+@import "https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap";
+@import "https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700;900&display=swap";
+@import "https://fonts.googleapis.com/css2?family=Russo+One&display=swap";
+@import "https://fonts.googleapis.com/css2?family=Big+Shoulders+Stencil+Display:wght@700;800;900&display=swap";
+@import "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap";
+@import "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css";
+
+#mw-page-base, #mw-head-base, #mw-navigation, #mw-head, #mw-panel, #footer, #siteNotice, .mw-notification-area, #firstHeading, #catlinks, .mw-editsection, .siteSub, .contentSub, #toc, .toc, #jump-to-nav, .mw-jump-link, #mw-indicator-mw-helplink { display: none !important; visibility: hidden !important; }
+#content { margin: 0 !important; padding: 0 !important; border: none !important; background: transparent !important; }
+#bodyContent { margin: 0 !important; padding: 0 !important; }
+body { overflow: hidden !important; margin: 0 !important; padding: 0 !important; background-color: #0A0A0A !important; }
+html { overflow: hidden !important; }
+
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: #0A0A0A; border-left: 1px solid #1a0505; }
+::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #E53935 0%, #8B0000 100%); }
+::-webkit-scrollbar-thumb:hover { background: #FFD700; }
+
+.userbox, .userboxes { background: transparent !important; border-color: #E53935 !important; }
+.userbox td, .userboxes td { background: rgba(10,10,10,0.9) !important; color: #E8E8E8 !important; border-color: #E53935 !important; }
+.userbox a, .userboxes a { color: #FFD700 !important; }
+
+.ccr-grain { background-image: repeating-linear-gradient(0deg, transparent 0, transparent 2px, rgba(255,255,255,0.012) 2px, rgba(255,255,255,0.012) 3px), repeating-linear-gradient(90deg, transparent 0, transparent 2px, rgba(229,57,53,0.01) 2px, rgba(229,57,53,0.01) 3px); pointer-events: none; }
+
+.ccr-star { clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
+
+.ccr-stencil { font-family: "Big Shoulders Stencil Display", "Oswald", sans-serif; font-weight: 900; letter-spacing: 0.02em; }
+.ccr-cyrillic { font-family: "Russo One", "Oswald", sans-serif; letter-spacing: 0.05em; }
+.ccr-mono { font-family: "JetBrains Mono", "Consolas", monospace; }
+
+.ccr-nav-link { transition: all 0.2s ease; position: relative; }
+.ccr-nav-link::after { content: ""; position: absolute; bottom: 10px; left: 50%; width: 0; height: 3px; background: #FFD700; transition: all 0.25s ease; transform: translateX(-50%); }
+.ccr-nav-link:hover { color: #FFD700 !important; }
+.ccr-nav-link:hover::after { width: 100%; }
+
+.ccr-medal { transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
+.ccr-medal:hover { transform: translateY(-10px) rotate(-1.5deg); box-shadow: 14px 14px 0 #E53935, 14px 14px 0 2px #FFD700 !important; }
+.ccr-medal:hover .ccr-medal-badge { transform: rotate(25deg) scale(1.15); }
+.ccr-medal-badge { transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
+
+.ccr-project { transition: all 0.28s ease; position: relative; }
+.ccr-project::before { content: ""; position: absolute; top: 0; left: 0; width: 0; height: 100%; background: linear-gradient(90deg, rgba(229,57,53,0.12), transparent); transition: width 0.35s ease; pointer-events: none; }
+.ccr-project:hover { transform: translateX(10px); border-left-color: #FFD700 !important; }
+.ccr-project:hover::before { width: 100%; }
+
+.ccr-contact { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; }
+.ccr-contact::before { content: ""; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent); transition: left 0.6s ease; }
+.ccr-contact:hover::before { left: 100%; }
+.ccr-contact:hover { transform: translateY(-8px) scale(1.02); }
+
+.ccr-cta { transition: all 0.22s ease; }
+.ccr-cta:hover { transform: scale(1.1) rotate(-1deg); box-shadow: 10px 10px 0 rgba(255,215,0,0.55) !important; }
+
+.ccr-stamp { transition: all 0.4s ease; }
+.ccr-stamp:hover { transform: rotate(-18deg) scale(1.15); }
+
+.ccr-sectnum { transition: color 0.4s ease; }
+.ccr-section:hover .ccr-sectnum { color: rgba(229,57,53,0.18) !important; }
+
+.fa-solid, .fa-brands, .fa-regular { vertical-align: middle; }
+
+.ccr-registration { width: 20px; height: 20px; background: #8B0000; position: absolute; }
+.ccr-registration::before { content: ""; position: absolute; inset: -6px; border: 1px solid #8B0000; }
+
+@media (max-width: 768px) {
+  .ccr-hero-title { font-size: 3em !important; }
+  .ccr-hero-sub { font-size: 1.1em !important; }
+  .ccr-hero-ghost { font-size: 8em !important; }
+  .ccr-section-title { font-size: 1.8em !important; }
+  .ccr-sectnum { font-size: 5em !important; }
+  .ccr-medal-grid { grid-template-columns: 1fr !important; }
+  .ccr-contact-grid { grid-template-columns: 1fr !important; }
+  .ccr-hero-stripe { display: none !important; }
+  .ccr-nav-inner { gap: 15px !important; }
+  .ccr-content-pad { padding: 30px 20px !important; }
+}
+}}
+
+<div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 2147483647; background: #0A0A0A; display: flex; flex-direction: column; color: #E8E8E8; font-family: 'Noto Serif JP', 'Hiragino Mincho ProN', serif; line-height: 1.8; overflow: hidden;">
+
+<div class="ccr-grain" style="position: absolute; inset: 0; z-index: 1;"></div>
+
+<div style="position: fixed; top: 0; left: 0; right: 0; height: 60px; background: linear-gradient(180deg, #0A0A0A 0%, #120404 100%); border-bottom: 4px solid #E53935; z-index: 100; display: flex; align-items: center; padding: 0 40px; box-shadow: 0 4px 0 #FFD700, 0 4px 20px rgba(229,57,53,0.2);">
+<div style="position: absolute; bottom: -4px; left: 0; width: 140px; height: 4px; background: #FFD700;"></div>
+<div style="display: flex; align-items: center; gap: 14px; margin-right: auto;">
+<div style="width: 36px; height: 36px; background: #E53935; display: flex; align-items: center; justify-content: center; box-shadow: 3px 3px 0 #FFD700;">
+<span style="color: #FFD700; font-size: 1.5em; line-height: 1;">☭</span>
+</div>
+<div style="display: flex; flex-direction: column; line-height: 1;">
+<span class="ccr-cyrillic" style="color: #FFD700; font-size: 1.15em; letter-spacing: 0.18em;">KONGYOKONGYO</span>
+<span class="ccr-mono" style="color: #666; font-size: 0.65em; letter-spacing: 0.25em; margin-top: 3px;">№ 001 · 技術総局</span>
+</div>
+</div>
+<div class="ccr-nav-inner" style="display: flex; gap: 30px; align-items: center;">
+[[#ccr-overview|<span class="ccr-nav-link" style="color: #999; font-family: 'Oswald', sans-serif; font-size: 0.9em; letter-spacing: 0.15em; padding: 20px 0; display: block;">OVERVIEW</span>]]
+[[#ccr-medals|<span class="ccr-nav-link" style="color: #999; font-family: 'Oswald', sans-serif; font-size: 0.9em; letter-spacing: 0.15em; padding: 20px 0; display: block;">MEDALS</span>]]
+[[#ccr-ops|<span class="ccr-nav-link" style="color: #999; font-family: 'Oswald', sans-serif; font-size: 0.9em; letter-spacing: 0.15em; padding: 20px 0; display: block;">OPS</span>]]
+[[#ccr-comms|<span class="ccr-nav-link" style="color: #999; font-family: 'Oswald', sans-serif; font-size: 0.9em; letter-spacing: 0.15em; padding: 20px 0; display: block;">COMMS</span>]]
+[[利用者‐会話:Kongyokongyo|<span class="ccr-nav-link" style="color: #999; font-family: 'Oswald', sans-serif; font-size: 0.9em; letter-spacing: 0.15em; padding: 20px 0; display: block;">TALK</span>]]
+<span class="plainlinks">[{{fullurl:{{FULLPAGENAME}}|action=edit}} <span style="color: #444; font-size: 0.85em;"><i class="fa-solid fa-pen-to-square"></i></span>]</span>
+</div>
+</div>
+
+<div style="flex-grow: 1; overflow-y: auto; overflow-x: hidden; margin-top: 64px; position: relative; z-index: 2;">
+
+<div id="ccr-overview" class="ccr-section" style="min-height: calc(100vh - 64px); display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;">
+
+<div class="ccr-hero-stripe" style="position: absolute; top: -20%; right: -5%; width: 45%; height: 140%; background: #E53935; transform: skewX(-12deg); z-index: 1;"></div>
+<div style="position: absolute; top: -20%; right: calc(-5% + 45% - 2px); width: 8px; height: 140%; background: #FFD700; transform: skewX(-12deg); z-index: 2;"></div>
+<div style="position: absolute; top: -20%; right: calc(-5% + 45% - 32px); width: 2px; height: 140%; background: rgba(255,215,0,0.4); transform: skewX(-12deg); z-index: 2;"></div>
+
+<div class="ccr-hero-ghost" aria-hidden="true" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: 'Big Shoulders Stencil Display', sans-serif; font-weight: 900; font-size: 22em; color: rgba(229,57,53,0.035); letter-spacing: -0.04em; line-height: 0.8; white-space: nowrap; z-index: 2; pointer-events: none;">☭KONGYO☭</div>
+
+<div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(255,255,255,0.012) 1px, rgba(255,255,255,0.012) 2px); pointer-events: none; z-index: 3;"></div>
+
+<div style="position: absolute; top: 90px; left: 40px; z-index: 5;"><div class="ccr-mono" style="color: #444; font-size: 0.7em; letter-spacing: 0.25em; line-height: 2;"><span style="color: #E53935;">●</span> REC<br><span style="color: #FFD700;">●</span> 2026-04-17<br><span style="color: #666;">●</span> 09:41:23</div></div>
+
+<div style="position: absolute; bottom: 120px; left: 40px; z-index: 5; display: flex; flex-direction: column; gap: 6px;">
+<div style="display: flex; gap: 4px;"><div style="width: 3px; height: 20px; background: #E53935;"></div><div style="width: 3px; height: 20px; background: #E53935;"></div><div style="width: 3px; height: 20px; background: transparent; border: 1px solid #333;"></div><div style="width: 3px; height: 20px; background: #FFD700;"></div><div style="width: 3px; height: 20px; background: transparent; border: 1px solid #333;"></div><div style="width: 3px; height: 20px; background: #E53935;"></div><div style="width: 3px; height: 20px; background: #E53935;"></div></div>
+<div class="ccr-mono" style="color: #444; font-size: 0.6em; letter-spacing: 0.2em;">KGY-2026-001-A</div>
+</div>
+
+<div style="position: relative; z-index: 10; text-align: left; max-width: 720px; padding: 0 60px;">
+
+<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 30px;">
+<div style="width: 50px; height: 4px; background: #E53935;"></div>
+<div style="width: 8px; height: 8px; background: #FFD700; transform: rotate(45deg);"></div>
+<span class="ccr-stencil" style="font-size: 0.95em; color: #E53935; letter-spacing: 0.28em;">PEOPLE'S TECH BUREAU</span>
+</div>
+
+<div class="ccr-hero-title ccr-stencil" style="font-size: 6.2em; color: #FFFFFF; line-height: 0.88; letter-spacing: -0.01em; margin-bottom: 22px; text-shadow: 5px 5px 0 #E53935;">
+KONGYO<br>KONGYO
+</div>
+
+<div class="ccr-hero-sub ccr-cyrillic" style="font-size: 1.55em; color: #FFD700; letter-spacing: 0.22em; margin-bottom: 36px; display: flex; align-items: center; gap: 18px;">
+<span style="font-size: 0.7em; color: #E53935;">★</span>
+<span>技術総局・局長級</span>
+<span style="font-size: 0.7em; color: #E53935;">★</span>
+</div>
+
+<div style="max-width: 520px; font-size: 1.05em; color: #AAA; line-height: 2; margin-bottom: 40px; padding-left: 18px; border-left: 3px solid rgba(229,57,53,0.35);">
+同志よ、ここは<span style="color: #FFD700; font-weight: bold;">[[利用者:Kongyokongyo]]</span>の革命的活動拠点である。主体(チュチェ)思想に基づき、我々は<span style="color: #E53935; font-weight: bold;">TypeScript</span>と<span style="color: #E53935; font-weight: bold;">MediaWiki</span>の力を結集し、アンサイクロペディアの技術的発展に寄与する。
+</div>
+
+<div style="display: flex; gap: 22px; align-items: center;">
+<div style="position: relative; width: 88px; height: 88px; border: 4px solid #E53935; display: flex; align-items: center; justify-content: center; box-shadow: 6px 6px 0 #FFD700;">
+<div style="position: absolute; inset: -4px; border: 1px solid rgba(255,215,0,0.25); pointer-events: none;"></div>
+<span style="font-size: 3em; color: #FFD700; line-height: 1;">☭</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px;">
+<div style="display: flex; align-items: center; gap: 10px;">
+<div class="ccr-star" style="width: 14px; height: 14px; background: #E53935;"></div>
+<span class="ccr-mono" style="color: #888; font-size: 0.8em; letter-spacing: 0.15em;">SYSTEM ONLINE</span>
+</div>
+<div style="display: flex; align-items: center; gap: 10px;">
+<div class="ccr-star" style="width: 14px; height: 14px; background: #FFD700;"></div>
+<span class="ccr-mono" style="color: #888; font-size: 0.8em; letter-spacing: 0.15em;">LOYALTY 100%</span>
+</div>
+<div style="display: flex; align-items: center; gap: 10px;">
+<div class="ccr-star" style="width: 14px; height: 14px; background: #666;"></div>
+<span class="ccr-mono" style="color: #666; font-size: 0.8em; letter-spacing: 0.15em;">CLEARANCE ALPHA</span>
+</div>
+</div>
+</div>
+{{:利用者:Kongyokongyo/雫ちゃん}}
+</div>
+</div>
+
+<div style="position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 10; display: flex; flex-direction: column; align-items: center;">
+<div style="width: 1px; height: 60px; background: linear-gradient(180deg, transparent, #E53935); margin-bottom: 10px;"></div>
+<span class="ccr-stencil" style="font-size: 0.75em; color: #555; letter-spacing: 0.4em;">SCROLL ▼</span>
+</div>
+</div>
+
+<div id="ccr-medals" class="ccr-section" style="padding: 130px 0 120px; position: relative;">
+<div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #E53935 0%, #E53935 30%, transparent 30%, transparent 32%, #FFD700 32%, #FFD700 34%, transparent 34%);"></div>
+<div style="position: absolute; top: 60px; right: 60px; width: 120px; height: 120px; border: 3px dashed rgba(229,57,53,0.15); transform: rotate(12deg); display: flex; align-items: center; justify-content: center; pointer-events: none;">
+<span class="ccr-stencil" style="color: rgba(229,57,53,0.2); font-size: 0.85em; letter-spacing: 0.2em; text-align: center; line-height: 1.3;">PEOPLE'S<br>ARCHIVE</span>
+</div>
+
+<div class="ccr-content-pad" style="max-width: 1100px; margin: 0 auto; padding: 0 60px;">
+
+<div style="display: flex; align-items: flex-end; gap: 24px; margin-bottom: 70px;">
+<div class="ccr-sectnum ccr-stencil" style="font-size: 9em; color: rgba(229,57,53,0.1); line-height: 0.8; margin-bottom: -12px;">01</div>
+<div>
+<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+<div style="width: 40px; height: 3px; background: #E53935;"></div>
+<div class="ccr-star" style="width: 10px; height: 10px; background: #FFD700;"></div>
+<span class="ccr-stencil" style="font-size: 0.85em; color: #E53935; letter-spacing: 0.32em;">SECTION · ДЕКОРАЦИЯ</span>
+</div>
+<div class="ccr-section-title ccr-stencil" style="font-size: 3em; color: #FFF; letter-spacing: 0.02em;">DECORATIONS</div>
+<div class="ccr-mono" style="color: #444; font-size: 0.75em; letter-spacing: 0.2em; margin-top: 6px;">— 授与された革命勲章一覧 ——</div>
+</div>
+</div>
+
+<div class="ccr-medal-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 34px;">
+
+<div class="ccr-medal" style="background: #111; border: 3px solid #E53935; padding: 30px; position: relative; box-shadow: 8px 8px 0 rgba(229,57,53,0.18);">
+<div style="position: absolute; top: -3px; left: -3px; width: 0; height: 0; border-top: 22px solid #FFD700; border-right: 22px solid transparent;"></div>
+<div class="ccr-medal-badge" style="position: absolute; top: 0; right: 0; width: 62px; height: 62px; background: #E53935; display: flex; align-items: center; justify-content: center; transform-origin: center;">
+<i class="fa-brands fa-discord" style="font-size: 1.55em; color: #FFF;"></i>
+</div>
+<div class="ccr-mono" style="color: #666; font-size: 0.65em; letter-spacing: 0.2em; margin-bottom: 8px;">ORDER № I — CLASS α</div>
+<div class="ccr-stencil" style="font-size: 1.55em; color: #FFD700; margin-bottom: 6px; letter-spacing: 0.04em;">人民功労勲章</div>
+<div style="font-size: 0.78em; color: #666; margin-bottom: 20px; font-family: 'Oswald', sans-serif; letter-spacing: 0.12em;">DISCORD REVOLUTIONARY NETWORK</div>
+<div style="border-top: 2px solid #E53935; padding-top: 18px; position: relative;">
+<div style="position: absolute; top: -6px; left: 50%; transform: translateX(-50%); width: 10px; height: 10px; background: #111; border: 2px solid #E53935; border-radius: 50%;"></div>
+{{User Discord参加|1=kongyo|2=kongyokongyo|id=kongyokongyo}}</div>
+</div>
+
+<div class="ccr-medal" style="background: #111; border: 3px solid #2E7D32; padding: 30px; position: relative; box-shadow: 8px 8px 0 rgba(46,125,50,0.18);">
+<div style="position: absolute; top: -3px; left: -3px; width: 0; height: 0; border-top: 22px solid #FFD700; border-right: 22px solid transparent;"></div>
+<div class="ccr-medal-badge" style="position: absolute; top: 0; right: 0; width: 62px; height: 62px; background: #2E7D32; display: flex; align-items: center; justify-content: center; transform-origin: center;">
+<i class="fa-brands fa-line" style="font-size: 1.55em; color: #FFF;"></i>
+</div>
+<div class="ccr-mono" style="color: #666; font-size: 0.65em; letter-spacing: 0.2em; margin-bottom: 8px;">ORDER № II — CLASS β</div>
+<div class="ccr-stencil" style="font-size: 1.55em; color: #81C784; margin-bottom: 6px; letter-spacing: 0.04em;">通信革命勲章</div>
+<div style="font-size: 0.78em; color: #666; margin-bottom: 20px; font-family: 'Oswald', sans-serif; letter-spacing: 0.12em;">LINE PEOPLE'S NETWORK</div>
+<div style="border-top: 2px solid #2E7D32; padding-top: 18px; position: relative;">
+<div style="position: absolute; top: -6px; left: 50%; transform: translateX(-50%); width: 10px; height: 10px; background: #111; border: 2px solid #2E7D32; border-radius: 50%;"></div>
+{{#vardefine:linename|{{#ifeq:{{{1|}}}|{{BASEPAGENAME}}||{{{1|}}}}}}}{{User box|border-color=#00B900|symbol-bc=#00B900|symbol-fc=#fff|symbol-fs=10px|info=<choose><option>{{BASEPAGENAME}}が[[UN:LINE|LINEオープンチャット]]にやってきました。{{#if:{{#var:linename}}|こちらでは{{#var:linename}}を名乗るようです。}}</option><option>{{BASEPAGENAME}}さん、[[UN:LINE|LINEオープンチャット]]へようこそ。{{#if:{{#var:linename}}|おや、こちらでは{{#var:linename}}というお名前なんですね。}}</option><option>{{BASEPAGENAME}}がただいま[[UN:LINE|LINEオープンチャット]]に{{#if:{{#var:linename}}|{{#var:linename}}として}}参加いたしました。</option><option>[[UN:LINE|LINEオープンチャット]]に{{BASEPAGENAME}}が出たぞー！{{#if:{{#var:linename}}|{{#var:linename}}を装っているが{{BASEPAGENAME}}に違いねぇ！}}</option><option>あ！野生の{{BASEPAGENAME}}が[[UN:LINE|LINEオープンチャット]]に飛び出してきた！</option></choose>|symbol=<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;">[[image:LINE_logo.svg|40px]]</div>}}</div>
+</div>
+
+<div class="ccr-medal" style="background: #111; border: 3px solid #00897B; padding: 30px; position: relative; box-shadow: 8px 8px 0 rgba(0,137,123,0.18);">
+<div style="position: absolute; top: -3px; left: -3px; width: 0; height: 0; border-top: 22px solid #FFD700; border-right: 22px solid transparent;"></div>
+<div class="ccr-medal-badge" style="position: absolute; top: 0; right: 0; width: 62px; height: 62px; background: #00897B; display: flex; align-items: center; justify-content: center; transform-origin: center;">
+<i class="fa-solid fa-microchip" style="font-size: 1.55em; color: #FFF;"></i>
+</div>
+<div class="ccr-mono" style="color: #666; font-size: 0.65em; letter-spacing: 0.2em; margin-bottom: 8px;">ORDER № III — CLASS γ</div>
+<div class="ccr-stencil" style="font-size: 1.55em; color: #80CBC4; margin-bottom: 6px; letter-spacing: 0.04em;">AI革命先鋒勲章</div>
+<div style="font-size: 0.78em; color: #666; margin-bottom: 20px; font-family: 'Oswald', sans-serif; letter-spacing: 0.12em;">AI VANGUARD DECORATION</div>
+<div style="border-top: 2px solid #00897B; padding-top: 18px; position: relative;">
+<div style="position: absolute; top: -6px; left: 50%; transform: translateX(-50%); width: 10px; height: 10px; background: #111; border: 2px solid #00897B; border-radius: 50%;"></div>
+{{User BelongPortal|AI}}</div>
+</div>
+
+</div>
+</div>
+</div>
+
+<div id="ccr-ops" class="ccr-section" style="padding: 130px 0 120px; position: relative; background: linear-gradient(180deg, #0A0A0A 0%, #120808 50%, #0A0A0A 100%);">
+<div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, transparent 65%, #FFD700 65%, #FFD700 67%, transparent 67%, transparent 70%, #E53935 70%);"></div>
+<div style="position: absolute; top: 60px; left: 60px; width: 140px; height: 140px; opacity: 0.08;">
+<div class="ccr-star" style="width: 100%; height: 100%; background: #E53935;"></div>
+</div>
+
+<div class="ccr-content-pad" style="max-width: 1100px; margin: 0 auto; padding: 0 60px;">
+
+<div style="display: flex; align-items: flex-end; gap: 24px; margin-bottom: 70px;">
+<div class="ccr-sectnum ccr-stencil" style="font-size: 9em; color: rgba(229,57,53,0.1); line-height: 0.8; margin-bottom: -12px;">02</div>
+<div>
+<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+<div style="width: 40px; height: 3px; background: #E53935;"></div>
+<div class="ccr-star" style="width: 10px; height: 10px; background: #FFD700;"></div>
+<span class="ccr-stencil" style="font-size: 0.85em; color: #E53935; letter-spacing: 0.32em;">SECTION · ОПЕРАЦИИ</span>
+</div>
+<div class="ccr-section-title ccr-stencil" style="font-size: 3em; color: #FFF; letter-spacing: 0.02em;">OPERATIONS</div>
+<div class="ccr-mono" style="color: #444; font-size: 0.75em; letter-spacing: 0.2em; margin-top: 6px;">— 重点推進課題遂行報告書 ——</div>
+</div>
+</div>
+
+<div style="background: linear-gradient(180deg, #fdf8ef 0%, #f5ebe0 100%); color: #1a0505; border-left: 8px solid #E53935; padding: 50px 60px; position: relative; box-shadow: 14px 14px 0 rgba(0,0,0,0.35);">
+
+<div class="ccr-registration" style="top: 14px; left: 14px;"></div>
+<div class="ccr-registration" style="top: 14px; right: 14px;"></div>
+<div class="ccr-registration" style="bottom: 14px; left: 14px;"></div>
+<div class="ccr-registration" style="bottom: 14px; right: 14px;"></div>
+
+<div class="ccr-stamp" style="position: absolute; top: 30px; right: 60px; width: 110px; height: 110px; border: 5px solid rgba(200,0,0,0.32); border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; transform: rotate(-12deg);">
+<span class="ccr-cyrillic" style="color: rgba(200,0,0,0.3); font-size: 0.7em; letter-spacing: 0.15em;">СЕКРЕТНО</span>
+<span style="color: rgba(200,0,0,0.38); font-weight: bold; font-size: 1.8em; line-height: 1;">承認</span>
+<span class="ccr-mono" style="color: rgba(200,0,0,0.3); font-size: 0.55em; letter-spacing: 0.15em;">№ KGY-4281</span>
+</div>
+
+<div style="position: absolute; bottom: 20px; left: 30px; font-size: 5em; color: rgba(139,0,0,0.045); font-weight: bold; font-family: 'Big Shoulders Stencil Display', sans-serif; letter-spacing: 0.12em;">CLASSIFIED</div>
+
+<div style="text-align: center; border-bottom: 4px double #8B0000; margin-bottom: 45px; padding-bottom: 22px; position: relative;">
+<div class="ccr-stencil" style="font-size: 2.1em; letter-spacing: 0.2em; color: #1a0505;"><i class="fa-solid fa-scroll" style="margin-right: 14px;"></i>重点推進課題遂行報告書</div>
+<div class="ccr-mono" style="font-size: 0.78em; color: #888; margin-top: 10px; letter-spacing: 0.22em;">REVOLUTIONARY TECH DEVELOPMENT REPORTS</div>
+<div style="display: flex; justify-content: center; gap: 8px; margin-top: 14px;">
+<span style="color: #8B0000; font-size: 0.75em;">★</span>
+<span class="ccr-mono" style="color: #666; font-size: 0.6em; letter-spacing: 0.2em;">FILE — KGY/OPS/2026</span>
+<span style="color: #8B0000; font-size: 0.75em;">★</span>
+</div>
+</div>
+
+<div class="ccr-project" style="margin-bottom: 35px; padding: 20px 25px; border-left: 5px solid #E53935; background: rgba(229,57,53,0.04);">
+<div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+<span class="ccr-stencil" style="background: #E53935; color: #FFF; padding: 5px 14px; font-size: 0.85em; letter-spacing: 0.2em;">01</span>
+<span class="ccr-stencil" style="font-size: 1.35em; color: #1a0505; letter-spacing: 0.02em;">API封鎖突破マニュアル</span>
+</div>
+<p style="margin: 8px 0; color: #444; font-size: 0.95em;">Cloudflare防衛機構の誤作動によるAPI完全封鎖を<span style="color: #C62828; font-weight: bold;">Cloudflare Workers</span>で迂回する野戦教範。最小構成から本格版APIルーターまで、各人が自力で封鎖を突破するための<span style="color: #C62828; font-weight: bold;">自力更生(チュチェ)</span>型技術指南書。</p>
+<div style="text-align: right; margin-top: 12px;">[[利用者:Kongyokongyo/API封鎖突破マニュアル|<span class="ccr-stencil" style="color: #C62828; letter-spacing: 0.08em; border-bottom: 3px solid #C62828; padding-bottom: 3px;"><i class="fa-solid fa-shield-halved" style="margin-right: 8px;"></i>BREACH</span>]]</div>
+</div>
+
+<div class="ccr-project" style="margin-bottom: 35px; padding: 20px 25px; border-left: 5px solid #E53935; background: rgba(229,57,53,0.04);">
+<div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+<span class="ccr-stencil" style="background: #E53935; color: #FFF; padding: 5px 14px; font-size: 0.85em; letter-spacing: 0.2em;">02</span>
+<span class="ccr-stencil" style="font-size: 1.35em; color: #1a0505; letter-spacing: 0.02em;">MCP Server Jaucp</span>
+</div>
+<p style="margin: 8px 0; color: #444; font-size: 0.95em;">AI戦士への物資輸送路(Cloudflare Workers)を確立。最新の諜報情報をリアルタイムで前線へ供給する画期的な<span style="color: #C62828; font-weight: bold;">兵站システム</span>である。</p>
+<div style="margin-top: 12px; background: #1a0505; padding: 14px 20px; display: flex; align-items: center; gap: 15px; border-left: 3px solid #FFD700;">
+<span class="ccr-stencil" style="color: #E53935; font-size: 0.8em; letter-spacing: 0.15em; white-space: nowrap;"><i class="fa-solid fa-tower-broadcast" style="margin-right: 8px;"></i>SSE:</span>
+<code class="ccr-mono" style="color: #4AF626; font-size: 0.85em;"><nowiki>https://ja-ucp.kongyo.workers.dev/sse</nowiki></code>
+</div>
+<div style="margin-top: 10px;">
+<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+<span class="ccr-stencil" style="color: #E53935; font-size: 0.8em; letter-spacing: 0.15em;"><i class="fa-solid fa-plug" style="margin-right: 8px;"></i>MCP JSON CONFIG:</span>
+</div>
+<syntaxhighlight lang="json">
+{
+    "mcpServers": {
+        "ja-ucp": {
+            "command": "npx",
+            "args": [
+                "mcp-remote",
+                "https://ja-ucp.kongyo.workers.dev/sse"
+            ]
+        }
+    }
+}
+</syntaxhighlight>
+</div>
+</div>
+
+<div class="ccr-project" style="margin-bottom: 35px; padding: 20px 25px; border-left: 5px solid #E53935; background: rgba(229,57,53,0.04);">
+<div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+<span class="ccr-stencil" style="background: #E53935; color: #FFF; padding: 5px 14px; font-size: 0.85em; letter-spacing: 0.2em;">03</span>
+<span class="ccr-stencil" style="font-size: 1.35em; color: #1a0505; letter-spacing: 0.02em;">Jaucp Helper Script</span>
+</div>
+<p style="margin: 8px 0; color: #444; font-size: 0.95em;">人民の執筆活動を支援するブラウザ型兵器。MediaWiki構文の装填を自動化し、生産性を<span style="color: #C62828; font-weight: bold;">飛躍的に向上</span>させる。</p>
+<div style="text-align: right; margin-top: 12px;">[[利用者:Kongyokongyo/ヘルパー配布|<span class="ccr-stencil" style="color: #C62828; letter-spacing: 0.08em; border-bottom: 3px solid #C62828; padding-bottom: 3px;"><i class="fa-solid fa-download" style="margin-right: 8px;"></i>DISTRIBUTE</span>]]</div>
+</div>
+
+<div class="ccr-project" style="margin-bottom: 35px; padding: 20px 25px; border-left: 5px solid #E53935; background: rgba(229,57,53,0.04);">
+<div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+<span class="ccr-stencil" style="background: #E53935; color: #FFF; padding: 5px 14px; font-size: 0.85em; letter-spacing: 0.2em;">04</span>
+<span class="ccr-stencil" style="font-size: 1.35em; color: #1a0505; letter-spacing: 0.02em;">私的VSC執筆ガイド</span>
+</div>
+<p style="margin: 8px 0; color: #444; font-size: 0.95em;">ローカル環境での<span style="color: #C62828; font-weight: bold;">自力更生(チュチェ)</span>を実現するための技術指導書。サーバー負荷軽減に貢献する革命的執筆手法。</p>
+<div style="text-align: right; margin-top: 12px;">[[利用者:Kongyokongyo/私的VSC執筆ガイド|<span class="ccr-stencil" style="color: #C62828; letter-spacing: 0.08em; border-bottom: 3px solid #C62828; padding-bottom: 3px;"><i class="fa-solid fa-book-open" style="margin-right: 8px;"></i>STUDY</span>]]</div>
+</div>
+
+<div class="ccr-project" style="margin-bottom: 35px; padding: 20px 25px; border-left: 5px solid #E53935; background: rgba(229,57,53,0.04);">
+<div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+<span class="ccr-stencil" style="background: #E53935; color: #FFF; padding: 5px 14px; font-size: 0.85em; letter-spacing: 0.2em;">05</span>
+<span class="ccr-stencil" style="font-size: 1.35em; color: #1a0505; letter-spacing: 0.02em;">LLM執筆入門</span>
+</div>
+<p style="margin: 8px 0; color: #444; font-size: 0.95em;"><span style="color: #C62828; font-weight: bold;">大規模言語モデル</span>を活用した革命的記事執筆技法。コンテクストエンジニアリングとTemperature操作により、AI戦士を真の執筆兵器へと覚醒させる。</p>
+<div style="text-align: right; margin-top: 12px;">[[利用者:Kongyokongyo/LLM執筆入門|<span class="ccr-stencil" style="color: #C62828; letter-spacing: 0.08em; border-bottom: 3px solid #C62828; padding-bottom: 3px;"><i class="fa-solid fa-brain" style="margin-right: 8px;"></i>EDUCATE</span>]]</div>
+</div>
+
+<div class="ccr-project" style="margin-bottom: 35px; padding: 20px 25px; border-left: 5px solid #E53935; background: rgba(229,57,53,0.04);">
+<div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+<span class="ccr-stencil" style="background: #E53935; color: #FFF; padding: 5px 14px; font-size: 0.85em; letter-spacing: 0.2em;">06</span>
+<span class="ccr-stencil" style="font-size: 1.35em; color: #1a0505; letter-spacing: 0.02em;">LLMによるCSS作成入門</span>
+</div>
+<p style="margin: 8px 0; color: #444; font-size: 0.95em;"><span style="color: #C62828; font-weight: bold;">CSS芸</span>をLLMに生成させるための専門技術指南書。コンテクスト錬成からプロパティ動作状況、禁忌事項まで網羅した[[利用者:Kongyokongyo/LLM執筆入門|LLM執筆入門]]の姉妹編。</p>
+<div style="text-align: right; margin-top: 12px;">[[利用者:Kongyokongyo/LLMによるCSS作成入門|<span class="ccr-stencil" style="color: #C62828; letter-spacing: 0.08em; border-bottom: 3px solid #C62828; padding-bottom: 3px;"><i class="fa-solid fa-palette" style="margin-right: 8px;"></i>TRAIN</span>]]</div>
+</div>
+
+<div class="ccr-project" style="margin-bottom: 35px; padding: 20px 25px; border-left: 5px solid #E53935; background: rgba(229,57,53,0.04);">
+<div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+<span class="ccr-stencil" style="background: #E53935; color: #FFF; padding: 5px 14px; font-size: 0.85em; letter-spacing: 0.2em;">07</span>
+<span class="ccr-stencil" style="font-size: 1.35em; color: #1a0505; letter-spacing: 0.02em;">人民用語辞典</span>
+</div>
+<p style="margin: 8px 0; color: #444; font-size: 0.95em;">日本語版アンサイクロペディアに蔓延る<span style="color: #C62828; font-weight: bold;">革命的語彙体系</span>を体系的に整理した用語辞典。NRV、二番煎じ、お子様ユーザー等、新参同志から古参闘士まで全人民の<span style="color: #C62828; font-weight: bold;">思想統一</span>に資する。</p>
+<div style="text-align: right; margin-top: 12px;">[[利用者:Kongyokongyo/人民用語辞典|<span class="ccr-stencil" style="color: #C62828; letter-spacing: 0.08em; border-bottom: 3px solid #C62828; padding-bottom: 3px;"><i class="fa-solid fa-book" style="margin-right: 8px;"></i>LEXICON</span>]]</div>
+</div>
+
+<div class="ccr-project" style="margin-bottom: 35px; padding: 20px 25px; border-left: 5px solid #E53935; background: rgba(229,57,53,0.04);">
+<div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+<span class="ccr-stencil" style="background: #E53935; color: #FFF; padding: 5px 14px; font-size: 0.85em; letter-spacing: 0.2em;">08</span>
+<span class="ccr-stencil" style="font-size: 1.35em; color: #1a0505; letter-spacing: 0.02em;">AI内ゲバ年代記</span>
+</div>
+<p style="margin: 8px 0; color: #444; font-size: 0.95em;">日本語版アンサイクロペディアにおける<span style="color: #C62828; font-weight: bold;">AI利用をめぐる四度の闘争</span>の全記録。2023年の原初の閃光から2025年U案勝利に至るまで、石黒版銀英伝ナレーション風に綴る<span style="color: #C62828; font-weight: bold;">革命的歴史叙述</span>。</p>
+<div style="text-align: right; margin-top: 12px;">[[利用者:Kongyokongyo/AI内ゲバ年代記|<span class="ccr-stencil" style="color: #C62828; letter-spacing: 0.08em; border-bottom: 3px solid #C62828; padding-bottom: 3px;"><i class="fa-solid fa-landmark" style="margin-right: 8px;"></i>CHRONICLE</span>]]</div>
+</div>
+
+<div class="ccr-project" style="padding: 20px 25px; border-left: 5px solid #E53935; background: rgba(229,57,53,0.04);">
+<div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+<span class="ccr-stencil" style="background: #E53935; color: #FFF; padding: 5px 14px; font-size: 0.85em; letter-spacing: 0.2em;">09</span>
+<span class="ccr-stencil" style="font-size: 1.35em; color: #1a0505; letter-spacing: 0.02em;">アンサイクロペディア本棚</span>
+</div>
+<p style="margin: 8px 0; color: #444; font-size: 0.95em;">革命的書架管理システム。ランダム記事20件を<span style="color: #C62828; font-weight: bold;">革装丁の蔵書</span>として書斎に陳列し、各記事のDEFAULTSORT・カテゴリ・内部リンク・赤リンク数を一覧する<span style="color: #C62828; font-weight: bold;">整備状況監視機構</span>を搭載。Hono + Cloudflare Workersによる即応展開。</p>
+<div style="margin-top: 12px; background: #1a0505; padding: 14px 20px; display: flex; align-items: center; gap: 15px; border-left: 3px solid #FFD700;">
+<span class="ccr-stencil" style="color: #E53935; font-size: 0.8em; letter-spacing: 0.15em; white-space: nowrap;"><i class="fa-solid fa-book-bookmark" style="margin-right: 8px;"></i>DEPLOY:</span>
+<span class="plainlinks">[https://kongyo-ja-ucp-hondana.kongyo.workers.dev/ <code class="ccr-mono" style="color: #4AF626; font-size: 0.85em;">kongyo-ja-ucp-hondana.kongyo.workers.dev</code>]</span>
+</div>
+</div>
+
+<div class="ccr-project" style="margin-top: 35px; padding: 20px 25px; border-left: 5px solid #E53935; background: rgba(229,57,53,0.04);">
+<div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+<span class="ccr-stencil" style="background: #E53935; color: #FFF; padding: 5px 14px; font-size: 0.85em; letter-spacing: 0.2em;">10</span>
+<span class="ccr-stencil" style="font-size: 1.35em; color: #1a0505; letter-spacing: 0.02em;">アンサイクロペディアカードガチャ</span>
+</div>
+<p style="margin: 8px 0; color: #444; font-size: 0.95em;">日本語版アンサイクロペディアの記事群を<span style="color: #C62828; font-weight: bold;">人民配給カード</span>として封入した革命的収集娯楽装置。ガチャを回して記事カードを獲得し、己のコレクションを拡充せよ。秀逸記事は<span style="color: #C62828; font-weight: bold;">最高レアリティ</span>として人民の射幸心を刺激する。Vercelによる即応展開。</p>
+<div style="margin-top: 12px; background: #1a0505; padding: 14px 20px; display: flex; align-items: center; gap: 15px; border-left: 3px solid #FFD700;">
+<span class="ccr-stencil" style="color: #E53935; font-size: 0.8em; letter-spacing: 0.15em; white-space: nowrap;"><i class="fa-solid fa-dice" style="margin-right: 8px;"></i>DEPLOY:</span>
+<span class="plainlinks">[https://ja-ucp-gacha.vercel.app/ <code class="ccr-mono" style="color: #4AF626; font-size: 0.85em;">ja-ucp-gacha.vercel.app</code>]</span>
+</div>
+</div>
+
+<div class="ccr-project" style="margin-top: 35px; padding: 20px 25px; border-left: 5px solid #E53935; background: rgba(229,57,53,0.04);">
+<div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+<span class="ccr-stencil" style="background: #E53935; color: #FFF; padding: 5px 14px; font-size: 0.85em; letter-spacing: 0.2em;">11</span>
+<span class="ccr-stencil" style="font-size: 1.35em; color: #1a0505; letter-spacing: 0.02em;">GitHub Pagesフォント配信マニュアル</span>
+</div>
+<p style="margin: 8px 0; color: #444; font-size: 0.95em;"><span style="color: #C62828; font-weight: bold;">GitHub Pages</span>を兵站拠点としたフォント補給線の構築教範。Google Fontsに存在しない任意のフォント——北朝鮮書体から架空言語まで——をWiki記事に注入するための<span style="color: #C62828; font-weight: bold;">自力更生(チュチェ)</span>型技術指南書。[[エージェンティックコーディング|エージェンティック]]/[[バイブコーディング]]による構築を推奨。</p>
+<div style="text-align: right; margin-top: 12px;">[[利用者:Kongyokongyo/GitHub Pagesフォント配信マニュアル|<span class="ccr-stencil" style="color: #C62828; letter-spacing: 0.08em; border-bottom: 3px solid #C62828; padding-bottom: 3px;"><i class="fa-solid fa-font" style="margin-right: 8px;"></i>SUPPLY</span>]]</div>
+</div>
+
+<div class="ccr-project" style="margin-top: 35px; padding: 20px 25px; border-left: 5px solid #E53935; background: rgba(229,57,53,0.04);">
+<div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+<span class="ccr-stencil" style="background: #E53935; color: #FFF; padding: 5px 14px; font-size: 0.85em; letter-spacing: 0.2em;">12</span>
+<span class="ccr-stencil" style="font-size: 1.35em; color: #1a0505; letter-spacing: 0.02em;">内部リンク整備ツール</span>
+</div>
+<p style="margin: 8px 0; color: #444; font-size: 0.95em;">記事の<span style="color: #C62828; font-weight: bold;">形態素解析</span>により名詞句を自動抽出し、リンクすべき語句を一括提案する革命的整備兵器。Wikitextを投入すれば記事の存在チェックからリンク反映まで一気通貫で遂行する<span style="color: #C62828; font-weight: bold;">内部リンク増産</span>装置。Vercelによる即応展開。</p>
+<div style="margin-top: 12px; background: #1a0505; padding: 14px 20px; display: flex; align-items: center; gap: 15px; border-left: 3px solid #FFD700;">
+<span class="ccr-stencil" style="color: #E53935; font-size: 0.8em; letter-spacing: 0.15em; white-space: nowrap;"><i class="fa-solid fa-link" style="margin-right: 8px;"></i>DEPLOY:</span>
+<span class="plainlinks">[https://ja-ucp-maintain-help.vercel.app/ <code class="ccr-mono" style="color: #4AF626; font-size: 0.85em;">ja-ucp-maintain-help.vercel.app</code>]</span>
+</div>
+</div>
+
+<div class="ccr-project" style="margin-top: 35px; padding: 20px 25px; border-left: 5px solid #E53935; background: rgba(229,57,53,0.04);">
+<div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+<span class="ccr-stencil" style="background: #E53935; color: #FFF; padding: 5px 14px; font-size: 0.85em; letter-spacing: 0.2em;">13</span>
+<span class="ccr-stencil" style="font-size: 1.35em; color: #1a0505; letter-spacing: 0.02em;">カスタム署名入門</span>
+</div>
+<p style="margin: 8px 0; color: #444; font-size: 0.95em;">議論の場で同志を識別するための<span style="color: #C62828; font-weight: bold;">革命的身分証明書</span>作成指南書。サブページ方式・<code>subst:</code>展開・「ウィキテキストとして扱う」の要諦から、装飾の作法と禁忌七戒、テンプレート内署名の特殊任務まで網羅。先達[[利用者:POLM/署名講座|POLM氏]]・[[利用者:.旻/署名のカスタマイズ|.旻氏]]の古典的指南書の現代版補完として、<span style="color: #C62828; font-weight: bold;">人民議論秩序</span>の維持に資する。</p>
+<div style="text-align: right; margin-top: 12px;">[[利用者:Kongyokongyo/カスタム署名入門|<span class="ccr-stencil" style="color: #C62828; letter-spacing: 0.08em; border-bottom: 3px solid #C62828; padding-bottom: 3px;"><i class="fa-solid fa-signature" style="margin-right: 8px;"></i>IDENTIFY</span>]]</div>
+</div>
+
+<div style="margin-top: 50px; padding-top: 22px; border-top: 2px dashed rgba(139,0,0,0.2); display: flex; justify-content: space-between; align-items: center;">
+<div style="display: flex; gap: 4px; align-items: center;"><div style="width: 2px; height: 22px; background: #1a0505;"></div><div style="width: 4px; height: 22px; background: #1a0505;"></div><div style="width: 1px; height: 22px; background: #1a0505;"></div><div style="width: 3px; height: 22px; background: #1a0505;"></div><div style="width: 2px; height: 22px; background: #1a0505;"></div><div style="width: 5px; height: 22px; background: #1a0505;"></div><div style="width: 1px; height: 22px; background: #1a0505;"></div><div style="width: 2px; height: 22px; background: #1a0505;"></div><div style="width: 4px; height: 22px; background: #1a0505;"></div><div style="width: 2px; height: 22px; background: #1a0505;"></div><div style="width: 3px; height: 22px; background: #1a0505;"></div><div style="width: 1px; height: 22px; background: #1a0505;"></div><div style="width: 5px; height: 22px; background: #1a0505;"></div><div style="width: 2px; height: 22px; background: #1a0505;"></div><div style="width: 3px; height: 22px; background: #1a0505;"></div></div>
+<div class="ccr-mono" style="color: #888; font-size: 0.7em; letter-spacing: 0.25em;">END OF REPORT · KGY/OPS/2026</div>
+</div>
+
+</div>
+</div>
+</div>
+
+<div id="ccr-comms" class="ccr-section" style="padding: 130px 0 120px; position: relative;">
+<div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #FFD700 0%, #FFD700 3%, transparent 3%, transparent 6%, #E53935 6%, #E53935 36%, transparent 36%);"></div>
+<div style="position: absolute; top: 80px; right: 60px; display: flex; flex-direction: column; gap: 8px; opacity: 0.3;">
+<div class="ccr-mono" style="color: #555; font-size: 0.65em; letter-spacing: 0.3em;">● ● ▬ ● ▬</div>
+<div class="ccr-mono" style="color: #555; font-size: 0.65em; letter-spacing: 0.3em;">▬ ● ▬ ▬ ●</div>
+<div class="ccr-mono" style="color: #555; font-size: 0.65em; letter-spacing: 0.3em;">● ▬ ● ● ●</div>
+</div>
+
+<div class="ccr-content-pad" style="max-width: 1100px; margin: 0 auto; padding: 0 60px;">
+
+<div style="display: flex; align-items: flex-end; gap: 24px; margin-bottom: 70px;">
+<div class="ccr-sectnum ccr-stencil" style="font-size: 9em; color: rgba(229,57,53,0.1); line-height: 0.8; margin-bottom: -12px;">03</div>
+<div>
+<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+<div style="width: 40px; height: 3px; background: #E53935;"></div>
+<div class="ccr-star" style="width: 10px; height: 10px; background: #FFD700;"></div>
+<span class="ccr-stencil" style="font-size: 0.85em; color: #E53935; letter-spacing: 0.32em;">SECTION · СВЯЗЬ</span>
+</div>
+<div class="ccr-section-title ccr-stencil" style="font-size: 3em; color: #FFF; letter-spacing: 0.02em;">COMMUNICATIONS</div>
+<div class="ccr-mono" style="color: #444; font-size: 0.75em; letter-spacing: 0.2em; margin-top: 6px;">— 同志への通信経路一覧 ——</div>
+</div>
+</div>
+
+<div class="ccr-contact-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px; max-width: 780px;">
+
+<div class="ccr-contact" style="background: #111; border: 2px solid #333; padding: 35px; text-align: center; position: relative;">
+<div style="position: absolute; top: 10px; left: 10px;" class="ccr-mono"><span style="color: #444; font-size: 0.6em; letter-spacing: 0.2em;">CH-01</span></div>
+<div style="font-size: 3em; margin-bottom: 15px; color: #5865F2;"><i class="fa-brands fa-discord"></i></div>
+<div class="ccr-stencil" style="font-size: 1.35em; color: #FFF; margin-bottom: 8px;">Discord</div>
+<div class="ccr-mono" style="color: #5865F2; font-size: 1em;">kongyokongyo</div>
+</div>
+
+<div class="ccr-contact" style="background: #111; border: 2px solid #333; padding: 35px; text-align: center; position: relative;">
+<div style="position: absolute; top: 10px; left: 10px;" class="ccr-mono"><span style="color: #444; font-size: 0.6em; letter-spacing: 0.2em;">CH-02</span></div>
+<div style="font-size: 3em; margin-bottom: 15px; color: #C9D1D9;"><i class="fa-brands fa-github"></i></div>
+<div class="ccr-stencil" style="font-size: 1.35em; color: #FFF; margin-bottom: 8px;">GitHub</div>
+<div class="ccr-mono" style="color: #C9D1D9; font-size: 1em;">kongyo2</div>
+</div>
+
+<div class="ccr-contact" style="grid-column: span 2; background: #111; border: 2px solid #E53935; padding: 35px; text-align: center; position: relative;">
+<div style="position: absolute; top: 10px; left: 10px;" class="ccr-mono"><span style="color: #E53935; font-size: 0.6em; letter-spacing: 0.2em;">CH-03 · SECURE</span></div>
+<div style="font-size: 3em; margin-bottom: 15px; color: #E53935;"><i class="fa-solid fa-building-shield"></i></div>
+<div class="ccr-stencil" style="font-size: 1.35em; color: #FFF; margin-bottom: 8px;">アンサイ下書き・避難所オルグ</div>
+<div style="color: #666; font-size: 0.9em; margin-bottom: 20px;">Miraheze戦略的避難拠点への接続ポータル</div>
+[[利用者:Kongyokongyo/アンサイ下書き・避難所オルグ|<span class="ccr-cta ccr-stencil" style="display: inline-block; background: #E53935; color: #FFF; padding: 13px 34px; letter-spacing: 0.15em; box-shadow: 6px 6px 0 rgba(229,57,53,0.35);"><i class="fa-solid fa-link" style="margin-right: 10px;"></i>CONNECT</span>]]
+</div>
+
+<div class="ccr-contact" style="grid-column: span 2; background: #111; border: 3px solid #FFD700; padding: 42px; text-align: center; position: relative;">
+<div style="position: absolute; top: 10px; left: 10px;" class="ccr-mono"><span style="color: #FFD700; font-size: 0.6em; letter-spacing: 0.2em;">CH-00 · DIRECT LINE</span></div>
+<div style="position: absolute; top: 10px; right: 10px;"><div class="ccr-star" style="width: 14px; height: 14px; background: #FFD700;"></div></div>
+<div style="font-size: 3em; margin-bottom: 15px; color: #FFD700;"><i class="fa-solid fa-satellite-dish"></i></div>
+<div class="ccr-stencil" style="font-size: 1.6em; color: #FFD700; margin-bottom: 8px; letter-spacing: 0.04em;">人民への直通回線</div>
+<div style="color: #888; font-size: 0.9em; margin-bottom: 24px;">同志への意見・要請・密告等はこちらへ</div>
+[[利用者‐会話:Kongyokongyo|<span class="ccr-cta ccr-stencil" style="display: inline-block; background: #FFD700; color: #0A0A0A; padding: 15px 48px; font-size: 1.2em; letter-spacing: 0.15em; box-shadow: 6px 6px 0 rgba(255,215,0,0.35);"><i class="fa-solid fa-paper-plane" style="margin-right: 12px;"></i>TRANSMIT</span>]]
+</div>
+
+</div>
+</div>
+</div>
+
+<div style="text-align: center; padding: 80px 0; border-top: 4px solid #E53935; position: relative;">
+<div style="position: absolute; top: -2px; left: 50%; transform: translateX(-50%); width: 120px; height: 4px; background: #FFD700;"></div>
+
+<div style="display: flex; justify-content: center; align-items: center; gap: 30px; margin-bottom: 25px;">
+<div style="width: 40px; height: 2px; background: #E53935;"></div>
+<div class="ccr-star" style="width: 18px; height: 18px; background: #E53935;"></div>
+<span style="color: #E53935; font-size: 2.4em; line-height: 1;">☭</span>
+<div class="ccr-star" style="width: 18px; height: 18px; background: #E53935;"></div>
+<div style="width: 40px; height: 2px; background: #E53935;"></div>
+</div>
+
+<div class="ccr-stencil" style="color: #444; font-size: 0.9em; letter-spacing: 0.28em;">© 主体{{#expr:{{#time:Y}}-1911}}年 ({{#time:Y}}) 人民電子技術委員会</div>
+<div class="ccr-mono" style="color: #2A2A2A; font-size: 0.72em; margin-top: 12px; letter-spacing: 0.15em;">All code serves the people. · KGY-FOOTER-001</div>
+</div>
+
+</div>
+</div>
+
+[[Category:利用者|Kongyokongyo]]

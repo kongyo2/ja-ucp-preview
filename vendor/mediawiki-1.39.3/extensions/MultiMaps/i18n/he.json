@@ -1,0 +1,39 @@
+{
+	"@metadata": {
+		"authors": [
+			"Amire80"
+		]
+	},
+	"multimaps-desc": "אפשרות ןלהציג מפות ולתאם נתונים באמצעות שירותי מיפוי מרובים",
+	"multimaps-loading-map": "המפה נטענת...",
+	"multimaps-mapservices-must-not-empty-array": "המשתנה \"$1\" אינו יכול להיות מערך ריק",
+	"multimaps-undefined-service-for-layout": "פרמטר service לא מוגדר לפריסה \"$1\" ב־<span dir=\"ltr\">$egMultiMaps_MapServices</span>",
+	"multimaps-wrong-service-for-layout": "לפריסה \"$1\" מוגדר שירות \"$2\", אבל הוא לא ב־<span dir=\"ltr\">$egMultiMaps_MapServices</span>",
+	"multimaps-layout-defined-for-layout": "לפריסה \"$1\" מוגדרת הפריסה האחרת \"$2\" במקום שירות ב־<span dir=\"ltr\">$egMultiMaps_MapServices</span>",
+	"multimaps-leaflet-undefined-parameters-for-layer": "יש לספק פרמטרים \"source\" ו־\"attribution\" עבור שכבת \"$1\" ב־<span dir=\"ltr\">$egMultiMaps_MapServices</span>",
+	"multimaps-had-following-errors": "בעת פענוח הפרמטרים שהועברו, אירעו השגיאות הבאות:",
+	"multimaps-element-illegal-value": "עבור הפרמטר \"$1\" צוין הערך הבלתי־תקין \"$2\". הערכים התקינים הם: $3",
+	"multimaps-element-more-parameters": "עבור רכיב המפה הזה \"$1\", הועברו יותר פרמטרים מהצפוי:",
+	"multimaps-element-parameters-not-processed": "הפרמטרים הבאים לא עובדו: $1",
+	"multimaps-circle-radius-not-defined": "בשביל מעגל יש להגדיר רדיוס",
+	"multimaps-circle-wrong-number-parameters": "בשביל מעגל צריך להגדיר רק שני פרמטרים, נקודות הציון של המרכז והרדיוס. אבל {{PLURAL:$1|צוין פרמטר אחד|צוינו $1 פרמטרים}}",
+	"multimaps-marker-incorrect-icon": "שם קובץ שגוי \"$1\" סופק עבור סמל הסמן.",
+	"multimaps-marker-incorrect-icon-url": "כתובת URL שגויה \"$1\" סופקה עבור סמל הסמן.",
+	"multimaps-marker-incorrect-icon-size": "גודל שגוי \"$1\" סופק עבור סמל הסמן \"$2\".",
+	"multimaps-marker-incorrect-icon-anchor": "עוגן שגוי \"$1\" סופק עבור סמל הסמן \"$2\".",
+	"multimaps-marker-incorrect-shadow-file": "שם קובץ שגוי \"$1\" סופק לצל הסמל.",
+	"multimaps-marker-incorrect-shadow-url": "כתובת URL שגויה \"$1\" סופקה לצל הסמל.",
+	"multimaps-marker-incorrect-shadow-size": "גודל שגוי \"$1\" סופק עבור צל הסמל \"$2\".",
+	"multimaps-marker-incorrect-shadow-anchor": "עוגן שגוי \"$1\" סופק עבור צל הסמל \"$2\".",
+	"multimaps-passed-unavailable-service": "שם השירות \"$1\" לא נמצא ברשימת השירותים הזמינים ($2). שימש שירות ברירת המחדל \"$3\"",
+	"multimaps-square-wrong-number-points": "נקודות ציון של הריבוע צריכות להכיל רק שתי נקודות, אבל {{PLURAL:$1|צוינה נקודה אחת|צוינו $1 נקודות}}",
+	"multimaps-unable-create-element": "לא ניתן ליצור את רכיב המפה \"$1\"",
+	"multimaps-unable-parse-coordinates": "אין אפשרות לפענח את נקודות הציון הגאוגרפיות \"$1\"",
+	"multimaps-unable-parse-parameter": "לא ניתן לפענח את הפרמטר \"$1\" הערך הוא \"$2\"",
+	"multimaps-unable-parse-radius": "רדיוס המעגל חייב להיות ערך מספרי, אך צוין \"$1\"",
+	"multimaps-unknown-class-for-service": "לא ניתן למצוא את המחלקה \"$1\" המוגדרת עבור השירות.",
+	"multimaps-unknown-parameter": "פרמטר לא ידוע: \"$1\"",
+	"multimaps-error-incorrect-class-for-service": "לא ניתן להשתמש במחלקה \"$1\" המוגדרת עבור השירות.",
+	"multimaps-method-error-unknown-action": "$1: פעולה לא ידועה",
+	"multimaps-method-error-unexpected-result": "$1: תוצאה בלתי־צפויה של פונקציה"
+}

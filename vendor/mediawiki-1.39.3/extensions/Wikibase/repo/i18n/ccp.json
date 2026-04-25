@@ -1,0 +1,36 @@
+{
+	"@metadata": {
+		"authors": [
+			"BivutiChakma"
+		]
+	},
+	"wikibase-entity": "𑄆𑄚𑄴𑄑𑄨𑄑𑄨",
+	"wikibase-entity-item": "𑄃𑄭𑄑𑄬𑄟𑄴",
+	"wikibase-entity-property": "𑄛𑄳𑄢𑄮𑄛𑄢𑄴𑄑𑄨",
+	"wikibase-entity-query": "𑄇𑄮𑄠𑄬𑄢𑄨",
+	"wikibase-edit": "𑄥𑄮𑄢𑄴 𑄉𑄧𑄢𑄚",
+	"wikibase-save": "𑄥𑄬𑄞𑄴 𑄉𑄧𑄢𑄴",
+	"wikibase-publish": "𑄛𑄝𑄴𑄣𑄨𑄥𑄴",
+	"wikibase-cancel": "𑄝𑄖𑄴 𑄘𑄬",
+	"wikibase-add": "𑄡𑄮𑄇𑄴 𑄉𑄧𑄢𑄴",
+	"wikibase-addqualifier": "𑄇𑄮𑄠𑄣𑄨𑄜𑄭𑄢𑄴 𑄆𑄉𑄧𑄖𑄴𑄧𑄢𑄴 𑄉𑄧𑄢𑄴",
+	"wikibase-addreference": "𑄢𑄬𑄜𑄢𑄬𑄚𑄴𑄥𑄴 𑄆𑄉𑄧𑄖𑄴𑄧𑄢𑄴 𑄉𑄧𑄢𑄴",
+	"wikibase-save-inprogress": "𑄥𑄬𑄞𑄨𑄁…",
+	"wikibase-publish-inprogress": "𑄛𑄝𑄴𑄣𑄨𑄥𑄨𑄁…",
+	"wikibase-remove-inprogress": "𑄢𑄨𑄟𑄪𑄞𑄨𑄁…",
+	"wikibase-statementlistview-add": "𑄞𑄬𑄣𑄪 𑄆𑄉𑄧𑄖𑄴𑄧𑄢𑄴 𑄉𑄧𑄢𑄴",
+	"wikibase-statementlistview-add-tooltip": "𑄆𑄇𑄴𑄮 𑄚𑄱 𑄞𑄬𑄣𑄪 𑄆𑄉𑄧𑄖𑄴𑄧𑄢𑄴 𑄉𑄧𑄢𑄴",
+	"wikibase-statementgrouplistview-add": "𑄃𑄨𑄥𑄴𑄑𑄬𑄑𑄴𑄟𑄬𑄚𑄴𑄑𑄴 𑄆𑄉𑄧𑄖𑄴𑄧𑄢𑄴 𑄉𑄧𑄢𑄴",
+	"wikibase-statementgrouplistview-add-tooltip": "𑄄𑄇𑄴𑄮 𑄚𑄱 𑄄𑄥𑄴𑄑𑄬𑄑𑄴𑄟𑄬𑄚𑄴𑄑𑄴 𑄆𑄉𑄧𑄖𑄴𑄧𑄢𑄴 𑄉𑄧𑄢𑄴",
+	"wikibase-entitytermsview-entitytermsforlanguagelistview-toggler": "𑄃𑄢𑄧 𑄞𑄌𑄴𑄳𑄦𑄚𑄨",
+	"wikibase-entitytermsview-entitytermsforlanguagelistview-configure-link-label": "𑄇𑄧𑄚𑄴𑄜𑄨𑄉𑄢𑄴",
+	"wikibase-entitytermsforlanguagelistview-aliases": "𑄃𑄢𑄧 𑄡𑄬 𑄚𑄋𑄬 𑄌𑄨𑄚𑄴𑄛𑄮𑄌𑄴𑄬",
+	"wikibase-entitytermsforlanguagelistview-description": "𑄓𑄬𑄥𑄴𑄇𑄳𑄢𑄨𑄛𑄴𑄥𑄧𑄚𑄴",
+	"wikibase-entitytermsforlanguagelistview-label": "𑄣𑄬𑄝𑄬𑄣𑄴",
+	"wikibase-entitytermsforlanguagelistview-language": "𑄞𑄌𑄴",
+	"wikibase-entitytermsforlanguagelistview-more": "𑄝𑄬𑄇𑄴 𑄞𑄮𑄢𑄬𑄠𑄬 𑄞𑄌𑄴𑄳𑄦𑄚𑄨",
+	"wikibase-entitytermsforlanguagelistview-less": "𑄇𑄧𑄟𑄴 𑄞𑄌𑄴 𑄘𑄬𑄊",
+	"wikibase-label-empty": "𑄚𑄮 𑄣𑄬𑄝𑄬𑄣𑄴 𑄓𑄨𑄜𑄭𑄚𑄴𑄓𑄴",
+	"wikibase-description-empty": "𑄚𑄮 𑄓𑄬𑄥𑄴𑄇𑄳𑄢𑄨𑄛𑄴𑄥𑄧𑄚𑄴 𑄓𑄨𑄜𑄭𑄚𑄴𑄓𑄴",
+	"wikibase-sitelinks-special": "𑄎𑄪𑄘𑄮 𑄥𑄭𑄑𑄴𑄥𑄴"
+}

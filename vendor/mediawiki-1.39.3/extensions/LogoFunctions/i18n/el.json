@@ -1,0 +1,9 @@
+{
+	"@metadata": {
+		"authors": [
+			"NikosLikomitros",
+			"Nikosgranturismogt"
+		]
+	},
+	"logofunctions-filenotexist": "Σφάλμα: Το αρχείο [[:File:$1]] δεν υπάρχει."
+}

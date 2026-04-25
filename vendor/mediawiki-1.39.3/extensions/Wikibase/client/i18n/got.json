@@ -1,0 +1,23 @@
+{
+	"@metadata": {
+		"authors": [
+			"Gothicspeaker"
+		]
+	},
+	"wikibase-comment-update": "{{WBREPONAME}} 𐍃𐍄𐌰𐍆𐍃 𐌹𐌽𐌼𐌰𐌹𐌳𐌾𐌹𐌸𐍃",
+	"wikibase-dataitem": "{{WBREPONAME}} 𐍃𐍄𐌰𐍆𐍃",
+	"wikibase-editlinks": "𐌲𐌰𐍅𐌹𐍃𐍃𐌹𐌽𐍃 𐌹𐌽𐌼𐌰𐌹𐌳𐌾𐌰𐌽",
+	"wikibase-editlinkstitle": "𐌹𐌽𐌼𐌰𐌹𐌳𐌴𐌹 𐌼𐌹𐌸𐍂𐌰𐌶𐌳𐌰𐌲𐌰𐍅𐌹𐍃𐍃𐌹𐌽𐍃",
+	"wikibase-addlinkstitle": "𐌼𐌹𐌸𐍂𐌰𐌶𐌳𐍉𐍃 𐌲𐌰𐍅𐌹𐍃𐍃𐌹𐌽𐍃 𐌱𐌹𐌰𐌿𐌺𐌰𐌽",
+	"wikibase-linkitem-addlinks": "𐌲𐌰𐍅𐌹𐍃𐍃𐌹𐌽𐍃 𐌱𐌹𐌰𐌿𐌺𐌰𐌽",
+	"wikibase-linkitem-title": "𐌼𐌹𐌸 𐌻𐌰𐌿𐌱𐌰 𐌲𐌰𐌲𐌰𐌷𐌰𐍆𐍄𐌾𐌰𐌽",
+	"wikibase-linkitem-linkpage": "𐌼𐌹𐌸 𐌻𐌰𐌿𐌱𐌰 𐌲𐌰𐌲𐌰𐌷𐌰𐍆𐍄𐌾𐌰𐌽",
+	"wikibase-linkitem-input-site": "𐍂𐌰𐌶𐌳𐌰:",
+	"wikibase-linkitem-input-page": "𐌻𐌰𐌿𐍆𐍃:",
+	"wikibase-rc-hide-wikidata": "$1 {{WBREPONAME}}",
+	"wikibase-rc-hide-wikidata-hide": "𐌰𐍆𐍆𐌹𐌻𐌷𐌰𐌽",
+	"wikibase-rc-hide-wikidata-show": "𐌱𐌰𐌽𐌳𐍅𐌾𐌰𐌽",
+	"wikibase-rc-wikibase-edit-letter": "𐌳",
+	"wikibase-rc-wikibase-edit-title": "{{WBREPONAME}} 𐌹𐌽𐌼𐌰𐌹𐌳𐌴𐌹",
+	"wikibase-otherprojects": "𐌹𐌽 𐍆𐌰𐌿𐍂𐌰𐍅𐌰𐌿𐍂𐍀𐍉𐌼 𐌰𐌽𐌸𐌰𐍂𐌰𐌹𐌼"
+}

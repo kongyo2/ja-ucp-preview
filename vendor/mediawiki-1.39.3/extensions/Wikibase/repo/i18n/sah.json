@@ -1,0 +1,17 @@
+{
+	"@metadata": {
+		"authors": [
+			"HalanTul",
+			"Ladsgroup",
+			"MARKSDNW"
+		]
+	},
+	"wikibase-edit": "уларыт",
+	"wikibase-add": "эп",
+	"wikibase-label-empty": "Бэлиэтэ (аата) суох",
+	"wikibase-description-empty": "Бу туһунан сиһилии сурулла илик эбит",
+	"wikibase-statementsection-statements": "Этиилэр",
+	"wikibase-sitelinks-special": "Атын ситим-сирдэр",
+	"wikibase-statementview-rank-normal": "Ранг",
+	"wikibase-statementview-references-counter": "$1 {{PLURAL:$1|ылыллыбыт сир}}"
+}

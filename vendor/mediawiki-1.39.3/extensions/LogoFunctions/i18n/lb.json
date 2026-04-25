@@ -1,0 +1,10 @@
+{
+	"@metadata": {
+		"authors": [
+			"Robby",
+			"Volvox"
+		]
+	},
+	"logofunctions-desc": "Setzt eng Parserfunktioun fir de Wiki-Logo derbäi",
+	"logofunctions-filenotexist": "Feeler: [[:File:$1]] gëtt et net"
+}

@@ -1,0 +1,30 @@
+{
+	"@metadata": {
+		"authors": [
+			"Comp1089",
+			"Kareyac",
+			"Ләйсән",
+			"Рустам Нурыев",
+			"Roustammr",
+			"Sagan",
+			"З. ӘЙЛЕ"
+		]
+	},
+	"tooltip-t-wikibase": "Мәғлүмәт һаҡлағысына бәйле элементҡа һылтанма",
+	"wikibase-comment-update": "{{WBREPONAME}} элементы үҙгәртелгән",
+	"wikibase-dataitem": "{{WBREPONAME}} элементы",
+	"wikibase-editlinks": "Һылтанмаларҙы төҙәтергә",
+	"wikibase-editlinkstitle": "Башҡа телдәргә һылтанмаларҙы төҙәтеү",
+	"wikibase-linkitem-addlinks": "Һылтанмалар өҫтәргә",
+	"wikibase-linkitem-title": "Биткә һылтанма",
+	"wikibase-linkitem-linkpage": "Биткә һылтанма",
+	"wikibase-linkitem-selectlink": "Бит бит менән бәйләргә теләгән сайтты һәм битте һайлағыҙ.",
+	"wikibase-linkitem-input-site": "Тел:",
+	"wikibase-linkitem-input-page": "Бит:",
+	"wikibase-rc-hide-wikidata": "$1 {{WBREPONAME}}",
+	"wikibase-rc-hide-wikidata-hide": "Йәшерергә",
+	"wikibase-rc-hide-wikidata-show": "Күрһәтергә",
+	"wikibase-rc-wikibase-edit-letter": "D",
+	"wikibase-rc-wikibase-edit-title": "{{WBREPONAME}} үҙгәртеүе",
+	"wikibase-otherprojects": "Башҡа проекттарҙа"
+}

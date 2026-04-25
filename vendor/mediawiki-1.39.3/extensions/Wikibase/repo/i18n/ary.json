@@ -1,0 +1,31 @@
+{
+	"@metadata": {
+		"authors": [
+			"Abdeaitali",
+			"Anass Sedrati",
+			"Reda Benkhadra",
+			"SADIQUI",
+			"Ideophagous"
+		]
+	},
+	"wikibase-edit": "بدل",
+	"wikibase-add": "زيد",
+	"wikibase-addreference": "زيد شي مصدر",
+	"wikibase-statementlistview-add": "زيد شي قيمة",
+	"wikibase-statementgrouplistview-add": "زيد شي معلومة",
+	"wikibase-entitytermsforlanguagelistview-aliases": "سميات خرا باش معروف",
+	"wikibase-entitytermsforlanguagelistview-description": "لوصف",
+	"wikibase-entitytermsforlanguagelistview-label": "تسمية",
+	"wikibase-entitytermsforlanguagelistview-language": "لوغة",
+	"wikibase-entitytermsforlanguagelistview-more": "لوغات كاملة لي كاينة",
+	"wikibase-label-empty": "ما تعرفاتش أي تسمية",
+	"wikibase-description-empty": "ما كاين حتى شي وصف",
+	"wikibase-sitelinks-special": "مواقع أخرى",
+	"wikibase-statementview-rank-normal": "ترتيب طبيعي",
+	"wikibase-entityselector-more": "كتر",
+	"wikibase-setsitelink-introfull": "راك كاتقاد الليان ديال $2 ل [[:$1]].",
+	"wikibase-setsitelink-intro": "هاد لفورم كاتسمح ليك باش تقاد الليان ديال عنصر. راك محتاج ل توفير النمرة د لعنصر (متلاً Q23)، الرمز د السيت (مثلا \"enwiki\") و الليان د السيت باش يتقادّ عليه.",
+	"wikibase-setsitelink-label": "ليان د السيت:",
+	"wikibase-setsitelink-submit": "زيد ليان د السيت",
+	"wikibase-restoreold": "ترجاع"
+}

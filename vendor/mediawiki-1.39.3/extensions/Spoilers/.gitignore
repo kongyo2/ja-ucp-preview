@@ -1,0 +1,12 @@
+# OS files
+/.DS_Store
+
+# Editor files
+/.idea/
+/*.sublime-project
+/*.sublime-workspace
+
+# Composer
+/vendor/
+/node_modules/
+/composer.lock

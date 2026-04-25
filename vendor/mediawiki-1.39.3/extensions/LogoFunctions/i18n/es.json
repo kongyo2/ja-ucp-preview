@@ -1,0 +1,11 @@
+{
+	"@metadata": {
+		"authors": [
+			"Crazymadlover",
+			"Fitoschido",
+			"Jakeukalane"
+		]
+	},
+	"logofunctions-desc": "Agregar la función analizadora sobre el logo de la wiki",
+	"logofunctions-filenotexist": "Error: el archivo [[:File:$1]] no existe."
+}

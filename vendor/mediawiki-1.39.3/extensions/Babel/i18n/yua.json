@@ -1,0 +1,15 @@
+{
+	"@metadata": {
+		"authors": [
+			"Halle",
+			"Péepen17"
+		]
+	},
+	"babel": "A'almaj t'aan ti' máax ku meyajtiko'ob Babel",
+	"babel-desc": "Ku ts'áabal le función <code>#babel</code> parser uti'al u cha'ik u beeta'al jump'éel columna babel userbox yéetel u páajtalil u ts'a'abal plantillas personalizadas",
+	"babel-url": "Proyecto: Babel",
+	"babel-footer-url": ":u tsoolil:Babel - Usuario yo'ok'lal u t'aanil",
+	"babel-1": "Le máaka' yaan ti' jump'éel jeets' tuukul[[ $1 ]] ti' [[ $2 | $3 ]].",
+	"babel-3": "Le máaka' yaan ti' [[ $1 |ka'anal]] tuukul ti' [[ $2 | $3 ]].",
+	"babel-2-n": "Le máaka' [[ $1 |chúumuk yaan u]] na'at ti' [[ $2 |inglés]]."
+}

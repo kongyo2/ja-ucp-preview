@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: typecheck + build + test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Setup PHP 8.3
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: intl, mbstring, sqlite3, pdo_sqlite, xml, curl, gd
+          coverage: none
+          tools: composer
+
+      - name: Install Lua 5.1 (Scribunto luastandalone)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lua5.1
+          # The renderer hard-codes /usr/bin/lua5.1; verify it exists.
+          test -x /usr/bin/lua5.1
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Install bundled MediaWiki extension Composer dependencies
+        # TemplateStyles and Wikibase ship without their vendor/ trees in git
+        # because composer install is reproducible. The renderer asserts both
+        # vendor/autoload.php exist before booting MediaWiki.
+        run: |
+          for ext in TemplateStyles Wikibase; do
+            ext_dir="vendor/mediawiki-1.39.3/extensions/$ext"
+            if [ -f "$ext_dir/composer.json" ] && [ ! -f "$ext_dir/vendor/autoload.php" ]; then
+              echo "composer install --no-dev in $ext_dir"
+              (cd "$ext_dir" && composer install --no-dev --prefer-dist --no-interaction --no-progress)
+            fi
+          done
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm test

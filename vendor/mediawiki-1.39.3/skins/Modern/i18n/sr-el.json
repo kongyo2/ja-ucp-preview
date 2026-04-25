@@ -1,0 +1,12 @@
+{
+	"@metadata": {
+		"authors": [
+			"Kizule",
+			"Zoranzoki21"
+		]
+	},
+	"skinname-modern": "Savremeno",
+	"modern.css": "/* CSS postavljen ovde će uticati na sve korisnike teme „Savremeno“ */",
+	"modern.js": "/* Sav Javaskript postavljen će se učitati svim korisnicima savremene teme */",
+	"modern-desc": "Plava/siva tema sa bočnom trakom i gornjom trakom. Izvedena iz Monobuka"
+}

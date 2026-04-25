@@ -1,0 +1,17 @@
+{
+	"@metadata": {
+		"authors": [
+			"Sahran",
+			"TayfunEt.",
+			"Uzdil",
+			"Zolgoyo"
+		]
+	},
+	"wikibase-sitelinks-wikipedia": "ۋىكىپېدىيە",
+	"datatypes-type-string": "تېكىست",
+	"datatypes-type-quantity": "سانى",
+	"datatypes-type-number": "نومۇرى",
+	"datatypes-type-unknown": "بەلگىلەنمىگەن",
+	"datatypes-type-boolean": "بۇلىن",
+	"datatypes-type-wikibase-item": "تۈر"
+}

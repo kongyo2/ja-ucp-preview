@@ -1,0 +1,14 @@
+{
+	"@metadata": {
+		"authors": [
+			"ChoiChong",
+			"さきじょーぐー"
+		]
+	},
+	"wikibase-edit": "編集すん",
+	"wikibase-add": "追加",
+	"wikibase-label-empty": "ラベルー設定さりやびらん",
+	"wikibase-description-empty": "説明ぇーあいびらん",
+	"wikibase-sitelinks-special": "他ぬサイト",
+	"wikibase-statementview-rank-normal": "ふぃーじーランク"
+}

@@ -1,7 +1,7 @@
 {
   "name": "@kongyo2/ja-ucp-preview",
   "version": "0.1.0",
-  "description": "Exact-only offline Japanese Uncyclopedia preview renderer target for TypeScript/Node.js.",
+  "description": "Exact-only offline Japanese Uncyclopedia preview renderer for TypeScript/Node.js. Bundles MediaWiki 1.39.3 and the parser-affecting Japanese Uncyclopedia extensions.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -29,10 +29,27 @@
     "uncyclopedia",
     "wikitext",
     "preview",
-    "typescript"
+    "typescript",
+    "ja-ucp",
+    "ansaikuropedia"
   ],
-  "author": "",
+  "author": "kongyo2",
   "license": "MIT",
+  "homepage": "https://github.com/kongyo2/ja-ucp-preview#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kongyo2/ja-ucp-preview.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kongyo2/ja-ucp-preview/issues"
+  },
+  "engines": {
+    "node": ">=20.10.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "dependencies": {
     "@php-wasm/node": "^3.1.20",
     "@php-wasm/universal": "^3.1.20"

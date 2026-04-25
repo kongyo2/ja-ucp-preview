@@ -1,0 +1,13 @@
+{
+	"@metadata": {
+		"authors": [
+			"Innocentbunny",
+			"Sfic",
+			"Saurmandal"
+		]
+	},
+	"apihelp-query+babel-description": "सदस्य कितनी भाषाओं को जानता है, इस बारे में जानकारी लें",
+	"apihelp-query+babel-summary": "सदस्य कितनी भाषाओं को जानता है, इस बारे में जानकारी लें",
+	"apihelp-query+babel-param-user": "जिस सदस्य के बारे में जानकारी लेनी है",
+	"apihelp-query+babel-example-1": "<kbd>Example</kbd> सदस्य के बारे में बेबल जानकारी लें"
+}

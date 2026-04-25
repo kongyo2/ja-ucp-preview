@@ -1,0 +1,107 @@
+{
+	"name": "Cologne Blue",
+	"author": [
+		"Lee Daniel Crocker",
+		"..."
+	],
+	"url": "https://www.mediawiki.org/wiki/Skin:Cologne_Blue",
+	"descriptionmsg": "cologneblue-desc",
+	"namemsg": "skinname-cologneblue",
+	"license-name": "GPL-2.0-or-later",
+	"type": "skin",
+	"ValidSkinNames": {
+		"cologneblue": {
+			"class": "SkinMustache",
+			"args": [
+				{
+					"name": "cologneblue",
+					"styles": [
+						"skins.cologneblue"
+					],
+					"messages": [
+						"mainpage",
+						"about",
+						"aboutpage",
+						"searcharticle",
+						"searchbutton",
+						"searchsuggest-search",
+						"tooltip-search-go",
+						"tooltip-search-fulltext",
+						"tooltip-search",
+						"searchsuggest-search",
+						"sitetitle",
+						"colon-separator",
+						"sitesubtitle",
+						"tagline",
+						"navigation-heading",
+						"otherlanguages",
+						"qbfind",
+						"qbbrowse",
+						"qbedit",
+						"qbmyoptions",
+						"qbpageoptions"
+					]
+				}
+			]
+		}
+	},
+	"requires": {
+		"MediaWiki": ">= 1.39.0"
+	},
+	"Hooks": {
+		"SkinTemplateNavigation::Universal": [
+			"MediaWiki\\Extension\\CologneBlue\\Hooks::onSkinTemplateNavigationUniversal"
+		]
+	},
+	"MessagesDirs": {
+		"CologneBlue": [
+			"i18n"
+		]
+	},
+	"ResourceModules": {
+		"skins.cologneblue": {
+			"class": "ResourceLoaderSkinModule",
+			"features": {
+				"elements": true,
+				"interface": true,
+				"content-links": true,
+				"content-links-external": false,
+				"content-media": true,
+				"interface-message-box": true,
+				"interface-category": true,
+				"content-tables": true,
+				"i18n-ordered-lists": true,
+				"i18n-all-lists-margins": true,
+				"i18n-headings": true
+			},
+			"lessMessages": [
+				"pipe-separator"
+			],
+			"styles": {
+				"resources/oldshared.css": {},
+				"resources/skins.cologneblue.i18n.less": {},
+				"resources/screen.css": {
+					"media": "screen"
+				},
+				"resources/print.css": {
+					"media": "print"
+				}
+			}
+		}
+	},
+	"ResourceFileModulePaths": {
+		"localBasePath": "",
+		"remoteSkinPath": "CologneBlue"
+	},
+	"ResourceModuleSkinStyles": {
+		"cologneblue": {
+			"+oojs-ui-core.styles": "resources/ooui.less",
+			"+ext.echo.styles.badge": "resources/ext.echo.styles.badge.css",
+			"mediawiki.sectionAnchor": "resources/sectionAnchor.css"
+		}
+	},
+	"AutoloadNamespaces": {
+		"MediaWiki\\Extension\\CologneBlue\\": "includes/"
+	},
+	"manifest_version": 2
+}

@@ -1,0 +1,25 @@
+{
+	"@metadata": {
+		"authors": [
+			"Hanberke",
+			"TayfunEt.",
+			"Zolgoyo"
+		]
+	},
+	"tooltip-t-wikibase": "Birigen maglumat repozitorisi zadyna bag",
+	"wikibase-comment-update": "{{WBREPONAME}} zady üýtgedildi",
+	"wikibase-dataitem": "{{WBREPONAME}} zady",
+	"wikibase-editlinks": "Çykgytlary düzet",
+	"wikibase-editlinkstitle": "Dilara baglary düzet",
+	"wikibase-linkitem-addlinks": "Salgy goşuň",
+	"wikibase-linkitem-title": "Sahypa bilen baglanyşyk",
+	"wikibase-linkitem-linkpage": "Sahypa bilen baglanyşyk",
+	"wikibase-linkitem-selectlink": "Bu sahypa baglanyşdyrmak isleýän sahypaňyzy we sahypany saýlaň.",
+	"wikibase-linkitem-input-site": "Dil:",
+	"wikibase-linkitem-input-page": "Sahypa:",
+	"wikibase-rc-hide-wikidata-hide": "Gizle",
+	"wikibase-rc-hide-wikidata-show": "Görkez",
+	"wikibase-rc-wikibase-edit-letter": "M",
+	"wikibase-rc-wikibase-edit-title": "{{WBREPONAME}} düzetmesi",
+	"wikibase-otherprojects": "Başga taslamalarda"
+}

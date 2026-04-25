@@ -1,0 +1,18 @@
+{
+	"@metadata": {
+		"authors": [
+			"Don Alessandro",
+			"TayfunEt.",
+			"Zolgoyo"
+		]
+	},
+	"wikibase-edit": "deñiştir",
+	"wikibase-add": "qoy",
+	"wikibase-label-empty": "Tanımlanğan etiket yoq",
+	"wikibase-description-empty": "Tanımlanğan tasvir yoq",
+	"wikibase-sitelinks-special": "Başqa saytlar",
+	"wikibase-statementview-rank-normal": "Normal seviye",
+	"wikibase-anonymouseditwarning-dismiss-button": "Kirmeden devam et",
+	"special-gotolinkedpage": "Bağlanğan saifege keç",
+	"wikibase-gotolinkedpage-submit": "Keç"
+}

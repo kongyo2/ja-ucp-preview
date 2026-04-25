@@ -1,0 +1,12 @@
+{
+	"@metadata": {
+		"authors": [
+			"Masjawad99",
+			"Jawadywn"
+		]
+	},
+	"apihelp-query+babel-description": "Gari baso apo yang pacak dipakék pemakék ini",
+	"apihelp-query+babel-summary": "Cerudi'i baso apo baé yang pemakî ni paca' tereti.",
+	"apihelp-query+babel-param-user": "Pemakî yang na' dicerudi'i",
+	"apihelp-query+babel-example-1": "Cerudi'i pekaro Babel buat pemakî ni <kbd>Conto</kbd>"
+}

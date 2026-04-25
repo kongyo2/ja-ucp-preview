@@ -1,0 +1,25 @@
+{
+	"@metadata": {
+		"authors": [
+			"Klenje",
+			"Tocaibon"
+		]
+	},
+	"tooltip-t-wikibase": "Leam cul element colegât al dipuesit di dâts",
+	"wikibase-comment-update": "Element {{WBREPONAME}} cambiât",
+	"wikibase-dataitem": "Element {{WBREPONAME}}",
+	"wikibase-editlinks": "Modifiche i leams",
+	"wikibase-editlinkstitle": "Modifiche i leams cun altris lenghis",
+	"wikibase-linkitem-addlinks": "Zonte teams",
+	"wikibase-linkitem-title": "Leam cuntune pagjine",
+	"wikibase-linkitem-linkpage": "Leam cuntune pagjine",
+	"wikibase-linkitem-selectlink": "Sielç un sît e une pagjine che tu vuelis leâ a cheste pagjine.",
+	"wikibase-linkitem-input-site": "Lenghe:",
+	"wikibase-linkitem-input-page": "Pagjine:",
+	"wikibase-rc-hide-wikidata": "$1 {{WBREPONAME}}",
+	"wikibase-rc-hide-wikidata-hide": "Plate",
+	"wikibase-rc-hide-wikidata-show": "Mostre",
+	"wikibase-rc-wikibase-edit-letter": "D",
+	"wikibase-rc-wikibase-edit-title": "Modifiche fate su {{WBREPONAME}}",
+	"wikibase-otherprojects": "In altris progjets"
+}

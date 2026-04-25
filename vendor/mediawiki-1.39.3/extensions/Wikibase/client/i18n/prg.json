@@ -1,0 +1,26 @@
+{
+	"@metadata": {
+		"authors": [
+			"Iketsi",
+			"Nērtiks Jōrgesuns",
+			"Tīgelika",
+			"Kxeo"
+		]
+	},
+	"wikibase-dataitem": "dātasōbjaktan",
+	"wikibase-editlinks": "Redigīs autengīnsnans",
+	"wikibase-editlinkstitle": "Redigīs sirzdabilliskans autengīnsnans",
+	"wikibase-addlinkstitle": "Redigīs sirzdabilliskans autengīnsnans",
+	"wikibase-linkitem-addlinks": "Preidāis autengīnsnans",
+	"wikibase-linkitem-title": "Senristun sēn pāusan",
+	"wikibase-linkitem-linkpage": "Senristun sēn pāusan",
+	"wikibase-linkitem-selectlink": "Madli izrīnkais tinklasalōnan be pāusan kawīdans kwaitēi autengīntun en šin pāusan.",
+	"wikibase-linkitem-input-site": "Bilā:",
+	"wikibase-linkitem-input-page": "Pāusan:",
+	"wikibase-rc-hide-wikidata": "$1 {{WBREPONAME}}",
+	"wikibase-rc-hide-wikidata-hide": "Kliptinais",
+	"wikibase-rc-hide-wikidata-show": "Waidinnais",
+	"wikibase-rc-wikibase-edit-letter": "D",
+	"wikibase-rc-wikibase-edit-title": "{{WBREPONAME}} redigisnā",
+	"wikibase-otherprojects": "En kitēimans prōjaktans"
+}

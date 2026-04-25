@@ -1,0 +1,152 @@
+name: Publish to npm
+
+# Manually triggered. Bumps to version selected via `version` input,
+# tags the commit, and publishes the resulting tarball with provenance.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (e.g. 0.1.1, 0.2.0). Must match the version field in package.json or be a valid npm version bump (patch/minor/major).'
+        required: true
+        type: string
+      dry_run:
+        description: 'Run npm publish with --dry-run (no actual publish).'
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: publish-${{ github.workflow }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  publish:
+    name: Build and publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: npm-publish
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'npm'
+
+      - name: Setup PHP 8.3
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: intl, mbstring, sqlite3, pdo_sqlite, xml, curl, gd
+          coverage: none
+          tools: composer
+
+      - name: Install Lua 5.1
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lua5.1
+          test -x /usr/bin/lua5.1
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Install bundled MediaWiki extension Composer dependencies
+        run: |
+          for ext in TemplateStyles Wikibase; do
+            ext_dir="vendor/mediawiki-1.39.3/extensions/$ext"
+            if [ -f "$ext_dir/composer.json" ] && [ ! -f "$ext_dir/vendor/autoload.php" ]; then
+              (cd "$ext_dir" && composer install --no-dev --prefer-dist --no-interaction --no-progress)
+            fi
+          done
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm test
+
+      - name: Configure git author
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+      - name: Bump version (and tag)
+        id: version
+        run: |
+          set -euo pipefail
+          input='${{ inputs.version }}'
+          case "$input" in
+            patch|minor|major|prerelease|prepatch|preminor|premajor)
+              new_version=$(npm version "$input" --no-git-tag-version)
+              ;;
+            *)
+              # Treat as an explicit version. If it already matches, no-op; otherwise set it.
+              current=$(node -p "require('./package.json').version")
+              if [ "$current" != "$input" ]; then
+                new_version=$(npm version "$input" --no-git-tag-version --allow-same-version)
+              else
+                new_version="v$current"
+              fi
+              ;;
+          esac
+          # Strip leading 'v' if any.
+          version="${new_version#v}"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+
+      - name: Pack (sanity check tarball size)
+        run: |
+          npm pack --dry-run --json > pack.json
+          node -e "const p=require('./pack.json'); const e=p[0]; console.log('files:', e.entryCount, 'unpacked:', e.unpackedSize, 'packed:', e.size);"
+
+      - name: Publish to npm (dry run)
+        if: ${{ inputs.dry_run }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --provenance --access public --dry-run
+
+      - name: Publish to npm
+        if: ${{ !inputs.dry_run }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --provenance --access public
+
+      - name: Commit version bump and tag
+        if: ${{ !inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          version='${{ steps.version.outputs.version }}'
+          tag='${{ steps.version.outputs.tag }}'
+          if ! git diff --quiet -- package.json package-lock.json; then
+            git add package.json package-lock.json
+            git commit -m "chore(release): $version"
+          fi
+          if ! git rev-parse "$tag" >/dev/null 2>&1; then
+            git tag -a "$tag" -m "Release $version"
+          fi
+          git push origin HEAD:${{ github.ref_name }}
+          git push origin "$tag"
+
+      - name: Create GitHub Release
+        if: ${{ !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          version='${{ steps.version.outputs.version }}'
+          tag='${{ steps.version.outputs.tag }}'
+          gh release create "$tag" --title "$version" --generate-notes || \
+            gh release edit "$tag" --title "$version" --generate-notes

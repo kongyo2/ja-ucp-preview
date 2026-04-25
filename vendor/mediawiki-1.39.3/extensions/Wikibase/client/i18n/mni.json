@@ -1,0 +1,25 @@
+{
+	"@metadata": {
+		"authors": [
+			"Awangba Mangang",
+			"꯴꯰꯴"
+		]
+	},
+	"tooltip-t-wikibase": "ꯗꯥꯇꯥ ꯔꯤꯄꯣꯁꯤꯇꯣꯔꯤ ꯄꯣꯠꯂꯝꯒ ꯁꯝꯅꯔꯕ ꯁꯝꯅꯍꯟꯕ",
+	"wikibase-comment-update": "{{WBREPONAME}} ꯍꯣꯡꯗꯣꯛꯂꯕ ꯄꯣꯠꯂꯝ",
+	"wikibase-dataitem": "{{WBREPONAME}} ꯄꯣꯠꯂꯝ",
+	"wikibase-editlinks": "ꯁꯝꯅꯐꯝꯁꯤꯡ ꯁꯦꯝꯒꯠꯂꯛꯄ",
+	"wikibase-editlinkstitle": "ꯂꯣꯟ ꯑꯃꯥꯥ ꯑꯃꯥ ꯒꯤ ꯁꯝꯅꯐꯝꯒꯤ ꯁꯦꯝꯒꯠꯐꯝ",
+	"wikibase-linkitem-addlinks": "ꯁꯝꯅꯐꯝꯁꯤꯡ ꯍꯥꯞꯆꯤꯟꯂꯨ",
+	"wikibase-linkitem-title": "ꯂꯃꯥꯏ ꯂꯣꯏꯅꯅ ꯁꯝꯅꯕ",
+	"wikibase-linkitem-linkpage": "ꯂꯃꯥꯏ ꯂꯣꯏꯅꯅ ꯁꯝꯅꯕ",
+	"wikibase-linkitem-selectlink": "ꯆꯥꯟꯕꯤꯗꯨꯅꯥ ꯂꯃꯥꯏ ꯑꯁꯤꯒꯥ ꯂꯤꯡꯛ ꯇꯧꯕꯥ ꯄꯥꯝꯂꯤꯕ ꯁꯥꯏꯠ ꯑꯃꯥ ꯑꯃꯁꯨꯡ ꯂꯃꯥꯏ ꯑꯃꯥ ꯈꯟꯕꯤꯌꯨ ꯫",
+	"wikibase-linkitem-input-site": "ꯂꯣꯟ:",
+	"wikibase-linkitem-input-page": "ꯂꯃꯥꯏ:",
+	"wikibase-rc-hide-wikidata": "$1 {{WBREPONAME}}",
+	"wikibase-rc-hide-wikidata-hide": "ꯂꯣꯠꯄꯥ",
+	"wikibase-rc-hide-wikidata-show": "ꯎꯨꯠꯄ",
+	"wikibase-rc-wikibase-edit-letter": "ꯗ",
+	"wikibase-rc-wikibase-edit-title": "{{WBREPONAME}} ꯁꯦꯝꯒꯠꯄ",
+	"wikibase-otherprojects": "ꯑꯇꯣꯞꯄꯥ ꯊꯧꯔꯥꯡꯁꯤꯡꯗꯥ"
+}

@@ -1,0 +1,30 @@
+{
+	"@metadata": {
+		"authors": [
+			"Nokeoo"
+		]
+	},
+	"multimaps-desc": "Leidžia naudotojams atvaizduoti žemėlapius ir koordinuoti duomenis naudojant kelias žemėlapių paslaugas",
+	"multimaps-loading-map": "Įkeliamas žemėlapis...",
+	"multimaps-mapservices-must-not-empty-array": "Kintamasis „$1“ negali būti tuščias masyvas",
+	"multimaps-undefined-service-for-layout": "Neapibrėžtas paslaugos parametras išdėstymui „$1“ $egMultiMaps_MapServices",
+	"multimaps-wrong-service-for-layout": "Išdėstymui „$1“ apibrėžta paslauga „$2“, bet jos nėra $egMultiMaps_MapServices",
+	"multimaps-element-illegal-value": "parametrui „$1“ nurodyta negalima reikšmė „$2“. Galimos vertės: $3",
+	"multimaps-element-parameters-not-processed": "šie parametrai nebuvo apdoroti: $1",
+	"multimaps-circle-radius-not-defined": "apskritimo spindulys turi būti apibrėžtas",
+	"multimaps-circle-wrong-number-parameters": "apskritimui turi būti apibrėžti tik du parametrai – centro koordinatės ir spindulys. Bet nurodyta {{PLURAL:$1|vienas parametras|$1 parametrai}}",
+	"multimaps-marker-incorrect-icon": "Žymeklio piktogramai buvo pateiktas neteisingas failo pavadinimas „$1“.",
+	"multimaps-marker-incorrect-icon-url": "Žymeklio piktogramai buvo pateiktas neteisingas URL „$1“.",
+	"multimaps-marker-incorrect-icon-size": "Žymeklio piktogramai „$1“ pateiktas neteisingas dydis „$2“.",
+	"multimaps-marker-incorrect-shadow-file": "Piktogramos šešėliui buvo pateiktas neteisingas failo pavadinimas „$1“.",
+	"multimaps-marker-incorrect-shadow-url": "Piktogramos šešėliui buvo pateiktas neteisingas URL „$1“.",
+	"multimaps-marker-incorrect-shadow-size": "Piktogramos šešėliui „$1“ pateiktas neteisingas dydis „$2“.",
+	"multimaps-passed-unavailable-service": "Paslaugos pavadinimas „$1“ nerastas galimų paslaugų sąraše ($2). Naudota numatytoji paslauga „$3“",
+	"multimaps-square-wrong-number-points": "kvadrato koordinates turi apibrėžti tik du taškai, bet nurodyta {{PLURAL:$1| vienas taškas|$1 taškai}}",
+	"multimaps-unable-create-element": "Žemėlapio elemento „$1“ sukurti nepavyko",
+	"multimaps-unknown-class-for-service": "Klasė „$1“, apibrėžta paslaugai, nerasta.",
+	"multimaps-unknown-parameter": "Nežinomas parametras: „$1“",
+	"multimaps-error-incorrect-class-for-service": "Klasė „$1“, apibrėžta paslaugai, negali būti naudojama.",
+	"multimaps-method-error-unknown-action": "$1: Nežinomas veiksmas",
+	"multimaps-method-error-unexpected-result": "$1: Netikėtas funkcijos rezultatas"
+}

@@ -1,0 +1,35 @@
+.spoilers-body {
+	border: 1px dashed #000;
+	background-color: #EEE;
+	padding: 3px;
+	display: none;
+	color: #000;
+}
+
+.spoilers-body h1,
+.spoilers-body h2,
+.spoilers-body h3,
+.spoilers-body h4,
+.spoilers-body h5,
+.spoilers-body h6 {
+	color: #000;
+}
+
+.spoilers-button {
+	background: #AAA;
+	background: -moz-linear-gradient(top, #EEE, #AAA);
+	background: -webkit-linear-gradient(top, #EEE, #AAA);
+	background: -o-linear-gradient(top, #EEE, #AAA);
+	background: linear-gradient(to bottom, #EEE, #AAA);
+	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#EEE', endColorstr='#AAA', GradientType=0);
+	border: 1px solid #999;
+	border-radius: 5px;
+	padding: 3px 10px;
+	transition: 0.1s background-position linear;
+	color: #000;
+}
+
+.spoilers-button:hover {
+	background: #D2D2D2;
+	cursor: pointer;
+}

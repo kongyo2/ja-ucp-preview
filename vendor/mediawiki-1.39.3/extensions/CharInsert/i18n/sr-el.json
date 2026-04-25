@@ -1,0 +1,8 @@
+{
+	"@metadata": {
+		"authors": [
+			"Michaello"
+		]
+	},
+	"charinsert-desc": "Omogućava pravljenje JavaScript okvira za [[MediaWiki:Edittools|umetanje nestandardnih znakova]]"
+}

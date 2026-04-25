@@ -1,0 +1,12 @@
+{
+	"@metadata": {
+		"authors": [
+			"Justincheng12345",
+			"Kly",
+			"Mark85296341",
+			"Lakejason0"
+		]
+	},
+	"logofunctions-desc": "加入有關wiki的logo的解析器函數",
+	"logofunctions-filenotexist": "錯誤：[[:File:$1]] 不存在"
+}

@@ -1,0 +1,25 @@
+{
+	"@metadata": {
+		"authors": [
+			"Meerrahtar",
+			"Merrahtar"
+		]
+	},
+	"wikibase-comment-update": "{{WBREPONAME}} вуайхма",
+	"wikibase-comment-multi": "$1 {{PLURAL:$1|воа̄йхэсс|воа̄йхэз|воа̄йхэссэ}}",
+	"wikibase-dataitem": "{{WBREPONAME}} элеменнт",
+	"wikibase-editlinks": "Воа̄йхэ ужэтҍ",
+	"wikibase-editlinkstitle": "Воа̄йхэ мудта кӣлэ э̄л ужэтҍ",
+	"wikibase-linkitem-addlinks": "Лажьхэ ужэтҍ",
+	"wikibase-linkitem-title": "Ко̄ррэ лыстэнҍ",
+	"wikibase-linkitem-linkpage": "Ко̄ррэ лыстэнҍ",
+	"wikibase-linkitem-selectlink": "Ля̄ннч пӯррь, воа̄лэшьт лыст, мэ̄нн тонн та̄так тэнн лыстэнҍ ко̄ррэ.",
+	"wikibase-linkitem-input-site": "Кӣлл:",
+	"wikibase-linkitem-input-page": "Лысст:",
+	"wikibase-rc-hide-wikidata-hide": "Пе̄ҋҋтэ",
+	"wikibase-rc-hide-wikidata-show": "Вӯзьхэ",
+	"wikibase-rc-wikibase-edit-letter": "д",
+	"wikibase-rc-wikibase-edit-title": "{{grammar:genitive|{{WBREPONAME}}}} воа̄йхэсс",
+	"wikibase-rcfilters-hide-wikibase-label": "{{grammar:genitive|{{WBREPONAME}}}} воа̄йхэз",
+	"wikibase-otherprojects": "Мудта проэктэнҍ"
+}

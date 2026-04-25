@@ -1,0 +1,10 @@
+{
+	"@metadata": {
+		"authors": [
+			"MITO",
+			"Silvonen"
+		]
+	},
+	"multimaps-loading-map": "Ladataan karttaa...",
+	"multimaps-method-error-unknown-action": "$1: Tuntematon toiminto"
+}

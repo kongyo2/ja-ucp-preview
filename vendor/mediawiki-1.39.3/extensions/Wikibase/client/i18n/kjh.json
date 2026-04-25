@@ -1,0 +1,22 @@
+{
+	"@metadata": {
+		"authors": [
+			"AlexandrL714",
+			"Jolka Kaj",
+			"Андрей Саг.",
+			"Oxianboal"
+		]
+	},
+	"wikibase-dataitem": "{{WBREPONAME}} элементi",
+	"wikibase-editlinks": "Ссылкаларны тӱзедерге",
+	"wikibase-editlinkstitle": "Тіллер аразындағы сылтаныстарны тӱзедерге",
+	"wikibase-linkitem-addlinks": "Сылтаныстар хозарға",
+	"wikibase-linkitem-title": "Страницанаң палғалыстырары",
+	"wikibase-linkitem-linkpage": "Страницанаң палғалыстырарға",
+	"wikibase-linkitem-selectlink": "Сайтты паза пу страницанаң палғалыстырар страницаны таллап алыңар.",
+	"wikibase-linkitem-input-site": "Тіл:",
+	"wikibase-linkitem-input-page": "Страница:",
+	"wikibase-rc-hide-wikidata-hide": "Чазырарға",
+	"wikibase-rc-hide-wikidata-show": "Кӧзідерге",
+	"wikibase-otherprojects": "Пасха проекттерде:"
+}

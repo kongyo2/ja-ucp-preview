@@ -1,0 +1,23 @@
+{
+	"@metadata": {
+		"authors": [
+			"Katelem"
+		]
+	},
+	"wikibase-comment-update": "Mînwene inu eyi {{WBREPONAME}}",
+	"wikibase-dataitem": "{{WBREPONAME}} inu",
+	"wikibase-editlinks": "Nen̄e ebi kè ugọbọ",
+	"wikibase-addlinkstitle": "Tap ugọbọ eyi usem",
+	"wikibase-linkitem-addlinks": "Tap ugọbọ",
+	"wikibase-linkitem-title": "Gọbọ mèlek akpọk",
+	"wikibase-linkitem-linkpage": "Gọbọ mèlek akpọk",
+	"wikibase-linkitem-selectlink": "Soso gobo akpatan̄-etip mè akpọk eyi owu okiweek igọgọbọ inu lek akpọk yi.",
+	"wikibase-linkitem-input-site": "Usem:",
+	"wikibase-linkitem-input-page": "Akpọk:",
+	"wikibase-rc-hide-wikidata": "$1 {{WBREPONAME}}",
+	"wikibase-rc-hide-wikidata-hide": "Let",
+	"wikibase-rc-hide-wikidata-show": "San̄a jeen̄",
+	"wikibase-rc-wikibase-edit-letter": "D",
+	"wikibase-rc-wikibase-edit-title": "Ǹnen̄e-ǹge eyi {{WBREPONAME}}",
+	"wikibase-otherprojects": "Me ofifi projet kechilọ"
+}

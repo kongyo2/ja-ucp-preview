@@ -1,0 +1,27 @@
+{
+	"@metadata": {
+		"authors": [
+			"Ernác",
+			"GerardM",
+			"Къарачайлы"
+		]
+	},
+	"skinname-cologneblue": "Кёльн такъылыкъ",
+	"cologneblue-desc": "Минимум форматланнган дженгил тема",
+	"qbfind": "Таб",
+	"qbbrowse": "Къарау",
+	"qbedit": "Тюзет",
+	"qbpageoptions": "Бу бет",
+	"qbmyoptions": "Бетлерим",
+	"faqpage": "Project:FAQ",
+	"editthispage": "Бу бетни тюзет",
+	"create-this-page": "Бу бетни къура",
+	"deletethispage": "Бу бетни кетер",
+	"undeletethispage": "Бу бетни ызына сал",
+	"protectthispage": "Бу бетни джакъла",
+	"unprotectthispage": "Бу бетни джакълауун тюрлендир",
+	"talkpage": "Бу бетни сюз",
+	"articlepage": "Статьягъа къарау",
+	"userpage": "Хайырланыучу бетни кёргюз",
+	"projectpage": "Проектни бетине къара"
+}

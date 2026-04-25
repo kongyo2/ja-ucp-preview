@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+    paths-ignore:
+      - '**/*.adoc'
+      - '.github/copilot-instructions.md'
+  pull_request:
+    branches: [ master ]
+    paths-ignore:
+      - '**/*.adoc'
+      - '.github/copilot-instructions.md'
+  workflow_dispatch:
+
+jobs:
+
+  test:
+
+    runs-on: ubuntu-24.04
+    continue-on-error: ${{ matrix.experimental }}
+
+    strategy:
+      matrix:
+        include:
+          - mediawiki_version: '1.39'
+            php_version: 8.1
+            database_type: mysql
+            database_image: "mysql:8"
+            coverage: false
+            experimental: false
+          - mediawiki_version: '1.43'
+            php_version: 8.3
+            database_type: mysql
+            database_image: "mysql:8"
+            coverage: true
+            experimental: false
+
+    env:
+      MW_VERSION: ${{ matrix.mediawiki_version }}
+      PHP_VERSION: ${{ matrix.php_version }}
+      DB_TYPE: ${{ matrix.database_type }}
+      DB_IMAGE: ${{ matrix.database_image }}
+
+      
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+                   
+      - name: Update submodules
+        run: git submodule update --init --remote
+  
+      - name: Run tests
+        run: make ci
+        if: matrix.coverage == false
+
+      - name: Run tests with coverage
+        run: make ci-coverage
+        if: matrix.coverage == true
+
+      - name: Upload code coverage
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: build/coverage/php/coverage.xml,build/coverage/js/clover.xml
+        if: matrix.coverage == true

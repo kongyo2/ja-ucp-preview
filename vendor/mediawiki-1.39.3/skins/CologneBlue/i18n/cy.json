@@ -1,0 +1,28 @@
+{
+	"@metadata": {
+		"authors": [
+			"Lloffiwr",
+			"Xxglennxx",
+			"Afalau",
+			"Ceirios"
+		]
+	},
+	"skinname-cologneblue": "Glas Cwlen",
+	"cologneblue-desc": "Gwedd ysgafn heb lawer o fformatio",
+	"qbfind": "Canfod",
+	"qbbrowse": "Pori",
+	"qbedit": "Golygu",
+	"qbpageoptions": "Y dudalen hon",
+	"qbmyoptions": "Fy nhudalennau",
+	"faqpage": "Project:Cwestiynau cyffredin",
+	"editthispage": "Golygu'r dudalen hon",
+	"create-this-page": "Creu'r dudalen",
+	"deletethispage": "Dileu'r dudalen hon",
+	"undeletethispage": "Adfer y dudalen hon",
+	"protectthispage": "Diogelu'r dudalen hon",
+	"unprotectthispage": "Newid gosodiadau diogelwch y dudalen hon",
+	"talkpage": "Trafod y dudalen hon",
+	"articlepage": "Gweld tudalen gynnwys",
+	"userpage": "Gweld tudalen defnyddiwr",
+	"projectpage": "Gweld tudalen brosiect"
+}
