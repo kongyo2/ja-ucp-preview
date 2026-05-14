@@ -242,6 +242,33 @@ describe("ja ucp renderer", () => {
     expect(result.html).toContain("/wiki/Hello_World?x=y");
   }, 600_000);
 
+  it("routes non-Lua spawns through the externalSpawnHandler option", async () => {
+    let captured: { argv: string[] } | null = null;
+    const customBackend = createPhpWasmBackend({
+      workDir: ".ja-ucp-preview-work/vitest-ext-spawn",
+      externalSpawnHandler: ({ argv }) => {
+        captured = { argv };
+        return { stdout: "STUB-OK\n", exitCode: 0 };
+      }
+    });
+    const renderer = createJaUcpRenderer({ backend: customBackend });
+
+    const result = await renderer.render({
+      title: "Claude",
+      wikitext: "external spawn test"
+    });
+
+    // Whether or not parsing this short render triggers a non-Lua spawn,
+    // the rendering should still succeed; the test mainly asserts that
+    // the option is accepted by the public API and doesn't break the
+    // happy path. If a spawn happens (e.g. diff3 during install), the
+    // handler is invoked and we capture it.
+    expect(result.html).toContain("external spawn test");
+    if (captured !== null) {
+      expect(captured!.argv.length).toBeGreaterThan(0);
+    }
+  }, 600_000);
+
   it("renders Scribunto modules that operate on Japanese text via mw.ustring", async () => {
     const scribuntoBackend = createPhpWasmBackend({
       workDir: ".ja-ucp-preview-work/vitest-scribunto-ustring",

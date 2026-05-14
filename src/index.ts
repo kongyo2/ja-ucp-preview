@@ -18,7 +18,10 @@ export {
   ExactMediaWikiRuntimeError,
   createPhpWasmBackend,
   PhpWasmBackend,
-  type PhpWasmBackendOptions
+  type PhpWasmBackendOptions,
+  type ExternalSpawnHandler,
+  type ExternalSpawnRequest,
+  type ExternalSpawnResult
 } from "./backend/phpWasmBackend.js";
 export { jaUncyclopediaSnapshot } from "./site/snapshot.js";
 export {

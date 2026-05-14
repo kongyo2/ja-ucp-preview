@@ -1094,10 +1094,26 @@ export async function runScribuntoServer(
         if (all.length > n) stdinBuffer.push(all.subarray(n));
         return all.subarray(0, n);
       }
+      // Hold the timer handle so we can clearTimeout() the moment stdin
+      // data wakes us up. Otherwise every healthy `readBytes` call would
+      // leak a setTimeout (up to 60s in `dispatchToPhp`), keeping the
+      // event loop ref'd until it eventually fires – which delays
+      // teardown of finished Scribunto workers and creates avoidable
+      // timer churn under heavy `#invoke` usage.
+      let timer: ReturnType<typeof setTimeout> | null = null;
       const got = await new Promise<boolean>((resolve) => {
-        stdinResolver = () => resolve(true);
+        stdinResolver = () => {
+          if (timer !== null) {
+            clearTimeout(timer);
+            timer = null;
+          }
+          resolve(true);
+        };
         if (idleTimeoutMs > 0) {
-          setTimeout(() => resolve(false), idleTimeoutMs);
+          timer = setTimeout(() => {
+            timer = null;
+            resolve(false);
+          }, idleTimeoutMs);
         }
       });
       if (!got && idleTimeoutMs > 0) {

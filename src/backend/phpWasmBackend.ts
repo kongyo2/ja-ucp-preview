@@ -12,12 +12,45 @@ import {
 import { runScribuntoServer, type RenderContextForLua, type SpawnApi } from "./scribuntoServer.js";
 import { parseTitle } from "../site/title.js";
 
+export interface ExternalSpawnRequest {
+  /** Argv as PHP's proc_open saw it, after we've unwrapped /bin/sh and lua_ulimit.sh. */
+  argv: string[];
+  /** cwd PHP requested for the child, if any. */
+  cwd?: string;
+  /** Environment PHP passed to the child. */
+  env?: Record<string, string>;
+}
+
+export interface ExternalSpawnResult {
+  /** Bytes to surface as the child's stdout (empty by default). */
+  stdout?: string | Uint8Array;
+  /** Bytes to surface as the child's stderr (empty by default). */
+  stderr?: string | Uint8Array;
+  /** Exit code (defaults to 0 if you provided stdout, otherwise 127). */
+  exitCode?: number;
+}
+
+export type ExternalSpawnHandler = (
+  request: ExternalSpawnRequest
+) => ExternalSpawnResult | Promise<ExternalSpawnResult>;
+
 export interface PhpWasmBackendOptions {
   mediaWikiRoot?: string;
   workDir?: string;
   phpVersion?: "8.3" | "8.2" | "8.1" | "8.0" | "7.4";
   forceReinstall?: boolean;
   scribuntoEnabled?: boolean;
+  /**
+   * Optional callback for non-Lua shell-outs MediaWiki extensions make
+   * during parsing (e.g. SyntaxHighlight's pygmentize, ImageMagick).
+   * The default behaviour is to exit 127 with a "blocked" stderr message
+   * – which makes those parser features degrade to their pre-rendered
+   * fallback (raw text for SyntaxHighlight). Provide this if you have a
+   * host-side helper you want the parser to be able to call. The
+   * Scribunto Lua server's spawn handling is separate and is not routed
+   * through this callback.
+   */
+  externalSpawnHandler?: ExternalSpawnHandler;
 }
 
 export class ExactMediaWikiSnapshotMissingError extends Error {
@@ -107,6 +140,7 @@ export class PhpWasmBackend implements RendererBackend {
   private readonly forceReinstall: boolean;
   private readonly bridgePath: string;
   private readonly scribuntoEnabled: boolean;
+  private readonly externalSpawnHandler: ExternalSpawnHandler | undefined;
   private installationPromise?: Promise<InstallationPaths>;
   private phpPromise?: Promise<PhpInstance>;
   // Tracks the global wasm-trap counter at the moment we last booted PHP.
@@ -130,6 +164,7 @@ export class PhpWasmBackend implements RendererBackend {
     this.forceReinstall = options.forceReinstall ?? false;
     this.bridgePath = join(packageRoot, "src", "php", "ja-ucp-render.php");
     this.scribuntoEnabled = options.scribuntoEnabled ?? false;
+    this.externalSpawnHandler = options.externalSpawnHandler;
     this.luaStubPath = join(this.workDir, "scribunto-lua-stub.sh");
   }
 
@@ -469,7 +504,31 @@ echo 'ok';
             );
             return;
           }
+          // Non-Lua spawn (extension shell-outs: SyntaxHighlight's
+          // pygmentize, ImageMagick, etc.). If the caller wired up an
+          // externalSpawnHandler we delegate; otherwise we exit 127 with
+          // a stderr message so the parser feature degrades to its raw
+          // fallback (e.g. SyntaxHighlight shows source unhighlighted).
           api.notifySpawn();
+          if (self.externalSpawnHandler) {
+            try {
+              const req: ExternalSpawnRequest = { argv };
+              if (options.cwd !== undefined) req.cwd = options.cwd;
+              if (options.env !== undefined) req.env = options.env;
+              const result = await self.externalSpawnHandler(req);
+              if (result.stdout) api.stdout(result.stdout as never);
+              if (result.stderr) api.stderr(result.stderr as never);
+              api.exit(result.exitCode ?? (result.stdout ? 0 : 127));
+            } catch (err) {
+              api.stderr(
+                `ja-ucp-preview: external spawn handler threw: ${
+                  err instanceof Error ? err.message : String(err)
+                }\n`
+              );
+              api.exit(1);
+            }
+            return;
+          }
           api.stderr(`ja-ucp-preview: blocked spawn ${argv.join(" ")}\n`);
           api.exit(127);
         })
