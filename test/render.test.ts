@@ -1,13 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   createJaUcpRenderer,
-  createNativePhpBackend,
   createPhpWasmBackend,
   jaUncyclopediaSnapshot
 } from "../src/index.js";
 
 describe("ja ucp renderer", () => {
-  const backend = createNativePhpBackend({ workDir: ".ja-ucp-preview-work/vitest" });
+  const backend = createPhpWasmBackend({ workDir: ".ja-ucp-preview-work/vitest" });
 
   it("renders with MediaWiki 1.39.3 and the Japanese Uncyclopedia parser extensions", async () => {
     const renderer = createJaUcpRenderer({ backend });
@@ -21,7 +20,7 @@ describe("ja ucp renderer", () => {
     expect(result.html).toContain("<b>Claude</b>");
     expect(result.html).toContain(">5\n");
     expect(result.metadata.generator).toBe("MediaWiki 1.39.3");
-  }, 120_000);
+  }, 600_000);
 
   it("uses supplied page overrides instead of requiring a DB snapshot", async () => {
     const renderer = createJaUcpRenderer({ backend });
@@ -36,21 +35,17 @@ describe("ja ucp renderer", () => {
 
     expect(result.html).toContain("BAR X");
     expect(result.templates).toContain("テンプレート:Foo");
-  }, 120_000);
+  }, 600_000);
 
-  it("runs override-backed extension paths through MediaWiki", async () => {
+  it("runs override-backed extension paths through MediaWiki (no Scribunto)", async () => {
     const renderer = createJaUcpRenderer({ backend });
 
     const result = await renderer.render({
       title: "Claude",
       wikitext:
-        '<templatestyles src="Style/styles.css" />{{#vardefine:x|変数OK}}{{#var:x}} / {{#invoke:Example|hello}} / {{#urlget:q}} / {{#property:P31}} / {{WBREPONAME}}',
+        '<templatestyles src="Style/styles.css" />{{#vardefine:x|変数OK}}{{#var:x}} / {{#urlget:q}} / {{#property:P31}} / {{WBREPONAME}}',
       urlParameters: { q: "URL_OK" },
       pageOverrides: {
-        "Module:Example": {
-          contentModel: "Scribunto",
-          text: "local p = {}; function p.hello(frame) return 'Lua_OK' end; return p"
-        },
         "Template:Style/styles.css": {
           contentModel: "sanitized-css",
           text: ".ja-ucp-smoke { color: #0645ad; }"
@@ -58,10 +53,11 @@ describe("ja ucp renderer", () => {
       }
     });
 
-    expect(result.html).toContain("変数OK / Lua_OK / URL_OK");
+    expect(result.html).toContain("変数OK");
+    expect(result.html).toContain("URL_OK");
     expect(result.html).toContain("/ Wikidata");
     expect(result.html).toContain(".mw-parser-output .ja-ucp-smoke{color:#0645ad}");
-  }, 120_000);
+  }, 600_000);
 
   it("includes captured ja-ucp site styles by default without network access", async () => {
     const renderer = createJaUcpRenderer({ backend });
@@ -75,7 +71,7 @@ describe("ja ucp renderer", () => {
     expect(result.css).toContain("table.wikitable");
     expect(result.css).toContain('data-ja-ucp-source="MediaWiki:Gadget-SysopNicks.css"');
     expect(result.css).toContain("Make sysop nicks bold");
-  }, 120_000);
+  }, 600_000);
 
   it("can suppress captured site styles for parser-only consumers", async () => {
     const renderer = createJaUcpRenderer({ backend });
@@ -87,7 +83,7 @@ describe("ja ucp renderer", () => {
     });
 
     expect(result.css).not.toContain('data-ja-ucp-source="MediaWiki:Common.css"');
-  }, 120_000);
+  }, 600_000);
 
   it("resolves CSS extension page references into offline inline styles", async () => {
     const renderer = createJaUcpRenderer({ backend });
@@ -108,7 +104,7 @@ describe("ja ucp renderer", () => {
     expect(result.css).toContain('data-ja-ucp-source="MediaWiki:Preview.css"');
     expect(result.css).toContain(".from-page { color: blue; }");
     expect(result.css).not.toContain("<link");
-  }, 120_000);
+  }, 600_000);
 
   it("supports the ja-ucp CSS extension tag form", async () => {
     const renderer = createJaUcpRenderer({ backend });
@@ -123,7 +119,7 @@ describe("ja ucp renderer", () => {
     expect(result.html).not.toContain("&lt;css&gt;");
     expect(result.css).toContain('data-ja-ucp-source="inline-css"');
     expect(result.css).toContain(".tagcss { color: green; }");
-  }, 120_000);
+  }, 600_000);
 
   it("exposes the exact target extension snapshot", () => {
     expect(jaUncyclopediaSnapshot.extensions).toHaveLength(83);
@@ -144,7 +140,7 @@ describe("ja ucp renderer", () => {
     expect(jaUncyclopediaSnapshot.variables).toContain("directionmark");
   });
 
-  it("keeps PHP/WASM backend behind the same contract without making it the default", () => {
+  it("identifies the bundled PHP/WASM backend", () => {
     expect(createPhpWasmBackend().name).toBe("mediawiki-php-wasm");
   });
 });

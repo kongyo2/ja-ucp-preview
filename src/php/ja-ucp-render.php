@@ -6,14 +6,21 @@ error_reporting( E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_RECOVERA
 ini_set( 'display_errors', '0' );
 ini_set( 'log_errors', '1' );
 
-if ( $argc < 4 ) {
+// PHP/WASM running via php.run({scriptPath}) does not pre-define the STD*
+// streams. Define them so error reporting works under both CLI and wasm.
+if ( !defined( 'STDIN' ) ) { define( 'STDIN', fopen( 'php://stdin', 'rb' ) ); }
+if ( !defined( 'STDOUT' ) ) { define( 'STDOUT', fopen( 'php://stdout', 'wb' ) ); }
+if ( !defined( 'STDERR' ) ) { define( 'STDERR', fopen( 'php://stderr', 'wb' ) ); }
+
+$requestPath = $argv[1] ?? getenv( 'JA_UCP_REQUEST_PATH' ) ?: '';
+$localSettingsPath = $argv[2] ?? getenv( 'JA_UCP_LOCAL_SETTINGS' ) ?: '';
+$IP = $argv[3] ?? getenv( 'JA_UCP_MW_ROOT' ) ?: '';
+
+if ( $requestPath === '' || $localSettingsPath === '' || $IP === '' ) {
 	fwrite( STDERR, "Usage: php ja-ucp-render.php request.json LocalSettings.php mediawiki-root\n" );
+	fwrite( STDERR, "or set JA_UCP_REQUEST_PATH, JA_UCP_LOCAL_SETTINGS, JA_UCP_MW_ROOT.\n" );
 	exit( 2 );
 }
-
-$requestPath = $argv[1];
-$localSettingsPath = $argv[2];
-$IP = $argv[3];
 
 try {
 	$request = json_decode( file_get_contents( $requestPath ), true, 512, JSON_THROW_ON_ERROR );
@@ -80,7 +87,7 @@ try {
 			'title' => $title->getPrefixedText(),
 			'displayTitle' => $output->getDisplayTitle() ?: null,
 			'generator' => 'MediaWiki 1.39.3',
-			'backend' => 'mediawiki-native-php'
+			'backend' => getenv( 'JA_UCP_BACKEND_NAME' ) ?: 'mediawiki-php-wasm'
 		]
 	];
 

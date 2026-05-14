@@ -1,4 +1,4 @@
-import { NativePhpBackend } from "./backend/nativePhpBackend.js";
+import { PhpWasmBackend } from "./backend/phpWasmBackend.js";
 import { jaUncyclopediaSnapshot } from "./site/snapshot.js";
 import type {
   RenderContext,
@@ -21,7 +21,7 @@ export class JaUcpRenderer {
   private readonly context: RenderContext;
 
   constructor(options: JaUcpRendererOptions = {}) {
-    this.backend = options.backend ?? new NativePhpBackend();
+    this.backend = options.backend ?? new PhpWasmBackend();
     this.context = {
       site: options.site ?? jaUncyclopediaSnapshot,
       defaultUser: options.user ?? { username: "あなた", anonymous: true, groups: [] },
