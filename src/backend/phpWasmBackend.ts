@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
-import { existsSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync } from "node:fs";
 import { mkdir, rm, writeFile, readFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -320,6 +320,7 @@ echo 'ok';
       await (php as unknown as { setSpawnHandler: (h: unknown) => Promise<void> }).setSpawnHandler(
         createSpawnHandler(async (argvIn, api, options) => {
           const argv = unwrapShellArgv(argvIn);
+          logSpawnEvent(`spawn enabled=${scribuntoEnabled} isLua=${isLuaCommand(argv)} argvIn=${JSON.stringify(argvIn)} argv=${JSON.stringify(argv)}`);
           if (scribuntoEnabled && isLuaCommand(argv)) {
             await runScribuntoServer(argv, api as unknown as SpawnApi, options);
             return;
@@ -401,6 +402,19 @@ function splitShellCommand(line: string): string[] {
   }
   if (buffer.length > 0) tokens.push(buffer);
   return tokens;
+}
+
+function logSpawnEvent(message: string): void {
+  const target = process.env.JA_UCP_SCRIBUNTO_DEBUG;
+  if (!target) return;
+  try {
+    // Synchronous logging so awaiting it cannot deadlock the WASM spawn
+    // handler's call into PHP/WASM.
+    mkdirSync(dirname(target), { recursive: true });
+    appendFileSync(target, `[${new Date().toISOString()}] ${message}\n`, "utf8");
+  } catch {
+    /* ignore */
+  }
 }
 
 function isLuaCommand(argv: string[]): boolean {

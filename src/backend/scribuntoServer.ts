@@ -18,6 +18,19 @@
 // `scribuntoEnabled` flag is still opt-in for that reason.
 
 import { readFile } from "node:fs/promises";
+import { appendFileSync, mkdirSync } from "node:fs";
+import { dirname } from "node:path";
+
+function debugLog(line: string): void {
+  const target = process.env.JA_UCP_SCRIBUNTO_DEBUG;
+  if (!target) return;
+  try {
+    mkdirSync(dirname(target), { recursive: true });
+    appendFileSync(target, `[${new Date().toISOString()}] ${line}\n`, "utf8");
+  } catch {
+    /* ignore */
+  }
+}
 
 export interface SpawnApi {
   notifySpawn(): void;
@@ -45,7 +58,10 @@ export async function runScribuntoServer(
   api: SpawnApi,
   options: { cwd?: string; env?: Record<string, string> }
 ): Promise<void> {
+  void options;
+  debugLog(`enter runScribuntoServer argv=${JSON.stringify(argv)}`);
   api.notifySpawn();
+  debugLog("notifySpawn done");
 
   // `lua -v` probe used by LuaStandaloneInterpreter::getLuaVersion()
   if (argv.includes("-v")) {
@@ -62,6 +78,7 @@ export async function runScribuntoServer(
   }
   void argv[mwMainIdx + 1]; // scribuntoDir (unused – we do not load MWServer.lua)
   const interpreterId = parseInt(argv[mwMainIdx + 2] ?? "0", 10);
+  debugLog(`scribunto mode, interpreterId=${interpreterId}`);
 
   let lua: { doString(s: string): Promise<unknown>; global: { close(): void } };
   try {
@@ -69,6 +86,7 @@ export async function runScribuntoServer(
       Lua: { create(): Promise<typeof lua> };
     };
     lua = await mod.Lua.create();
+    debugLog("wasmoon Lua created");
   } catch (error: unknown) {
     api.stderr(
       `ja-ucp-preview Scribunto server: wasmoon-lua5.1 unavailable (${
@@ -87,6 +105,7 @@ export async function runScribuntoServer(
 
   api.on("stdin", (data) => {
     const u8 = data instanceof Uint8Array ? data : new Uint8Array(data as ArrayBuffer);
+    debugLog(`stdin event: ${u8.length} bytes`);
     stdinBuffer.push(Buffer.from(u8));
     const resolver = stdinResolver;
     if (resolver) {
@@ -162,10 +181,13 @@ export async function runScribuntoServer(
       return `s:${bytes}:"${value}";`;
     }
     if (typeof value === "object") {
-      // Scribunto's chunk-reference marker
-      if ((value as { __scribunto_function_id__?: number }).__scribunto_function_id__ !== undefined) {
-        const id = (value as { __scribunto_function_id__: number }).__scribunto_function_id__;
-        const inner = `s:13:"interpreterId";i:${interpreterId};s:2:"id";i:${id};`;
+      // Scribunto's chunk-reference marker, set by handleCall when wasmoon
+      // returned a Lua function or table-with-function. The id must be a
+      // real number; nil-returned-from-lua-via-wasmoon-proxy comes through
+      // as null/undefined and must not be confused with a real marker.
+      const markerId = (value as { __scribunto_function_id__?: unknown }).__scribunto_function_id__;
+      if (typeof markerId === "number") {
+        const inner = `s:13:"interpreterId";i:${interpreterId};s:2:"id";i:${markerId};`;
         return `O:42:"Scribunto_LuaStandaloneInterpreterFunction":2:{${inner}}`;
       }
       const entries: [string | number, unknown][] = [];
@@ -257,7 +279,9 @@ return result`;
   while (true) {
     let msg: ScribuntoMessage;
     try {
+      debugLog("waiting for message");
       msg = await readMessage();
+      debugLog(`got message op=${msg.op}`);
     } catch (error: unknown) {
       api.stderr(
         `ja-ucp-preview Scribunto server: ${
@@ -321,6 +345,8 @@ return result`;
         break;
     }
 
-    api.stdout(encodeForPhp(response));
+    const enc = encodeForPhp(response);
+    debugLog(`sending response op=${response.op} bytes=${enc.length}`);
+    api.stdout(enc);
   }
 }

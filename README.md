@@ -39,22 +39,36 @@ ja-ucp at packaging time.
 
 ## Scribunto / Lua
 
-Scribunto is bundled but disabled by default – it needs an external Lua 5.1
-interpreter and the upstream `LuaStandalone` engine launches a subprocess that
-the in-WASM PHP cannot spawn on its own. If you have a Lua 5.1 binary on the
-host, opt in like this:
+Scribunto is bundled but disabled by default. Opt in with
+`createPhpWasmBackend({ scribuntoEnabled: true })`; when set, MediaWiki loads
+Scribunto with `luastandalone`, and the renderer's WASM-side `proc_open`
+handler routes the spawned `lua` to a Node-side server backed by
+[`wasmoon-lua5.1`](https://www.npmjs.com/package/wasmoon-lua5.1) (no system
+Lua binary required).
+
+The Node-side server implements the LuaStandalone wire protocol (16-byte hex
+headers, PHP `serialize()` body, Lua-expression decoding) and exchanges
+`getStatus` / `cleanupChunks` / `loadString` / `call` /
+`registerLibrary` / `quit` messages with MediaWiki. However, executing modules
+that depend on `mw.*` requires also booting Scribunto's bundled
+`mwInit.lua` + `mw.lua` infrastructure inside the same Lua interpreter, which
+in turn re-enters PHP via `mw_interface` callbacks for each PHP-implemented
+library method. That re-entrancy can't be expressed in `wasmoon-lua5.1` 1.x
+because Lua 5.1 has no `:await()` for Promise-returning JS callbacks and the
+Promise returned by the JS-side `proc_open` callback can't be awaited from
+within a Lua-side `io.stdin:read()` call. Until that bridge lands, opting in
+will exchange the initial protocol handshake but fail before user `#invoke`
+output is produced.
+
+If you have a Lua 5.1 binary on the host, you can override the engine path:
 
 ```ts
-import { createJaUcpRenderer, createPhpWasmBackend } from "@kongyo2/ja-ucp-preview";
-
-const backend = createPhpWasmBackend({ scribuntoEnabled: true });
-const renderer = createJaUcpRenderer({ backend });
+const backend = createPhpWasmBackend({
+  scribuntoEnabled: true
+});
+// then pass $wgScribuntoEngineConf['luastandalone']['luaPath'] via your
+// LocalSettings override – see src/backend/phpWasmBackend.ts.
 ```
-
-In that mode `wfLoadExtension('Scribunto')` is included in the generated
-`LocalSettings.php` and `$wgScribuntoDefaultEngine = 'luastandalone'`. The
-runtime spawn handler will then forward `lua` invocations to a host Lua
-interpreter that you provide via the standard `$wgScribuntoEngineConf`.
 
 ## Public API
 
