@@ -243,11 +243,11 @@ describe("ja ucp renderer", () => {
   }, 600_000);
 
   it("routes non-Lua spawns through the externalSpawnHandler option", async () => {
-    let captured: { argv: string[] } | null = null;
+    const captured: Array<{ argv: string[] }> = [];
     const customBackend = createPhpWasmBackend({
       workDir: ".ja-ucp-preview-work/vitest-ext-spawn",
       externalSpawnHandler: ({ argv }) => {
-        captured = { argv };
+        captured.push({ argv });
         return { stdout: "STUB-OK\n", exitCode: 0 };
       }
     });
@@ -258,14 +258,13 @@ describe("ja ucp renderer", () => {
       wikitext: "external spawn test"
     });
 
-    // Whether or not parsing this short render triggers a non-Lua spawn,
-    // the rendering should still succeed; the test mainly asserts that
-    // the option is accepted by the public API and doesn't break the
-    // happy path. If a spawn happens (e.g. diff3 during install), the
-    // handler is invoked and we capture it.
+    // The render should always succeed regardless of whether parsing
+    // triggers a non-Lua spawn. If one fires (e.g. diff3 during the
+    // one-off install pass), our handler is invoked and the captured
+    // argv has at least one entry.
     expect(result.html).toContain("external spawn test");
-    if (captured !== null) {
-      expect(captured!.argv.length).toBeGreaterThan(0);
+    for (const c of captured) {
+      expect(c.argv.length).toBeGreaterThan(0);
     }
   }, 600_000);
 
