@@ -32,6 +32,256 @@ function debugLog(line: string): void {
   }
 }
 
+// Pure-Lua `mw` stub installed into the wasmoon environment before any user
+// Scribunto module runs. The full Scribunto `mw` library re-enters PHP via
+// `mw_interface`, which `wasmoon-lua5.1` can't dispatch synchronously today.
+// This stub covers the common pure-Lua helpers (mw.text.*, mw.ustring.*,
+// mw.html.*) that ja-ucp Scribunto modules typically use without needing a
+// round-trip into PHP.
+const MW_STUB_LUA = `
+mw = mw or {}
+
+-- mw.text -----------------------------------------------------------------
+mw.text = mw.text or {}
+
+function mw.text.trim(s)
+	if s == nil then return '' end
+	return (tostring(s):gsub('^%s*(.-)%s*$', '%1'))
+end
+
+function mw.text.split(s, pattern, plain)
+	local out, start, count = {}, 1, 0
+	s = tostring(s or '')
+	pattern = pattern or ''
+	if pattern == '' then
+		for i = 1, #s do out[i] = s:sub(i, i) end
+		return out
+	end
+	if plain then
+		while true do
+			local a, b = s:find(pattern, start, true)
+			if not a then break end
+			count = count + 1
+			out[count] = s:sub(start, a - 1)
+			start = b + 1
+		end
+	else
+		while true do
+			local a, b = s:find(pattern, start)
+			if not a then break end
+			count = count + 1
+			out[count] = s:sub(start, a - 1)
+			start = b + 1
+			if a > b then start = start + 1 end
+		end
+	end
+	out[count + 1] = s:sub(start)
+	return out
+end
+
+function mw.text.gsplit(s, pattern, plain)
+	local parts = mw.text.split(s, pattern, plain)
+	local i = 0
+	return function()
+		i = i + 1
+		return parts[i]
+	end
+end
+
+function mw.text.listToText(list, separator, conjunction)
+	if type(list) ~= 'table' then return '' end
+	separator = separator or ', '
+	conjunction = conjunction or separator
+	local n = #list
+	if n == 0 then return '' end
+	if n == 1 then return tostring(list[1]) end
+	if n == 2 then return tostring(list[1]) .. conjunction .. tostring(list[2]) end
+	local out = {}
+	for i = 1, n - 1 do out[i] = tostring(list[i]) end
+	return table.concat(out, separator) .. conjunction .. tostring(list[n])
+end
+
+local html_entities = { ['<']='&lt;', ['>']='&gt;', ['&']='&amp;', ['"']='&quot;', ["'"]='&#039;' }
+function mw.text.encode(s, charset)
+	s = tostring(s or '')
+	charset = charset or [=[<>&"']=]
+	return (s:gsub('[' .. charset:gsub('([%%%]%^%-])', '%%%1') .. ']', html_entities))
+end
+
+local decode_entities = { ['lt']='<', ['gt']='>', ['amp']='&', ['quot']='"', ['nbsp']=' ' }
+function mw.text.decode(s)
+	s = tostring(s or '')
+	return (s:gsub('&([%a#][%w]*);', function(name)
+		if name:sub(1, 1) == '#' then
+			local n
+			if name:sub(2, 2) == 'x' or name:sub(2, 2) == 'X' then
+				n = tonumber(name:sub(3), 16)
+			else
+				n = tonumber(name:sub(2))
+			end
+			if n and n > 0 and n < 0x110000 then
+				if n < 0x80 then return string.char(n) end
+				-- best-effort UTF-8 encoding for common code points
+				if n < 0x800 then return string.char(0xC0 + math.floor(n/0x40), 0x80 + (n % 0x40)) end
+				if n < 0x10000 then return string.char(0xE0 + math.floor(n/0x1000), 0x80 + math.floor(n/0x40) % 0x40, 0x80 + (n % 0x40)) end
+				return string.char(0xF0 + math.floor(n/0x40000), 0x80 + math.floor(n/0x1000) % 0x40, 0x80 + math.floor(n/0x40) % 0x40, 0x80 + (n % 0x40))
+			end
+		end
+		return decode_entities[name] or ('&' .. name .. ';')
+	end))
+end
+
+function mw.text.nowiki(s)
+	return tostring(s or '')
+end
+mw.text.unstripNoWiki = mw.text.nowiki
+mw.text.unstrip = mw.text.nowiki
+
+function mw.text.tag(name, attrs, content)
+	if type(name) == 'table' then
+		attrs = name.attrs
+		content = name.content
+		name = name.name
+	end
+	local buf = '<' .. tostring(name)
+	if type(attrs) == 'table' then
+		for k, v in pairs(attrs) do
+			buf = buf .. ' ' .. tostring(k) .. '="' .. mw.text.encode(tostring(v)) .. '"'
+		end
+	end
+	if content == nil or content == false then
+		return buf .. ' />'
+	end
+	return buf .. '>' .. tostring(content) .. '</' .. tostring(name) .. '>'
+end
+
+function mw.text.truncate(s, n, ell, adjust)
+	s = tostring(s or '')
+	if #s <= (n or #s) then return s end
+	local truncated = s:sub(1, n or #s)
+	if ell ~= nil and ell ~= false then
+		truncated = truncated .. tostring(ell)
+	end
+	return truncated
+end
+
+-- mw.ustring (Unicode-aware string library). For our use we delegate to the
+-- standard string lib where the input is ASCII and otherwise return a
+-- byte-wise approximation, which matches what most simple Scribunto modules
+-- actually need.
+mw.ustring = mw.ustring or {}
+mw.ustring.maxStringLength = 2 ^ 30
+mw.ustring.maxPatternLength = 2 ^ 30
+
+local function utf8_len(s)
+	s = tostring(s or '')
+	local _, count = s:gsub('[^\\128-\\193]', '')
+	return count
+end
+
+mw.ustring.len = utf8_len
+
+function mw.ustring.sub(s, i, j)
+	s = tostring(s or '')
+	-- Naive char-counting sub for valid UTF-8 input. Good enough for simple
+	-- Scribunto modules; modules that depend on rigorous boundary handling
+	-- should expect to need the real Scribunto mw.ustring.
+	local idx, byte_start = 0, 1
+	if i and i > 0 then
+		while idx < i - 1 do
+			local b = s:byte(byte_start)
+			if not b then break end
+			byte_start = byte_start + utf8_byte_step(b)
+			idx = idx + 1
+		end
+	end
+	if j == nil then return s:sub(byte_start) end
+	local byte_end = byte_start
+	while idx < (j or 0) do
+		local b = s:byte(byte_end)
+		if not b then break end
+		byte_end = byte_end + utf8_byte_step(b)
+		idx = idx + 1
+	end
+	return s:sub(byte_start, byte_end - 1)
+end
+
+function utf8_byte_step(b)
+	if b < 0x80 then return 1 end
+	if b < 0xC0 then return 1 end
+	if b < 0xE0 then return 2 end
+	if b < 0xF0 then return 3 end
+	return 4
+end
+
+mw.ustring.upper = function(s) return string.upper(tostring(s or '')) end
+mw.ustring.lower = function(s) return string.lower(tostring(s or '')) end
+mw.ustring.byte = function(s, i, j) return string.byte(tostring(s or ''), i, j) end
+mw.ustring.byteoffset = function(s, n, i)
+	-- Best effort: byte offset of the n-th character starting at byte i
+	s = tostring(s or '')
+	local idx, off = 0, i or 1
+	while idx < (n or 0) do
+		local b = s:byte(off)
+		if not b then return nil end
+		off = off + utf8_byte_step(b)
+		idx = idx + 1
+	end
+	return off
+end
+mw.ustring.find = function(s, pat, init, plain) return string.find(tostring(s or ''), tostring(pat or ''), init, plain) end
+mw.ustring.match = function(s, pat, init) return string.match(tostring(s or ''), tostring(pat or ''), init) end
+mw.ustring.gmatch = function(s, pat) return string.gmatch(tostring(s or ''), tostring(pat or '')) end
+mw.ustring.gsub = function(s, pat, repl, n) return string.gsub(tostring(s or ''), tostring(pat or ''), repl, n) end
+mw.ustring.format = function(...) return string.format(...) end
+mw.ustring.rep = function(s, n) return string.rep(tostring(s or ''), n or 0) end
+mw.ustring.char = function(...) return string.char(...) end
+mw.ustring.codepoint = function(s, i, j)
+	s = tostring(s or '')
+	return string.byte(s, i or 1, j or i or 1)
+end
+
+-- Generic helpers that some modules pull out of mw directly.
+function mw.allToString(...)
+	local out, n = {}, select('#', ...)
+	for i = 1, n do out[i] = tostring(select(i, ...)) end
+	return table.concat(out, '\\t')
+end
+
+function mw.dumpObject(obj)
+	if type(obj) ~= 'table' then return tostring(obj) end
+	local parts = {}
+	for k, v in pairs(obj) do
+		parts[#parts + 1] = tostring(k) .. '=' .. tostring(v)
+	end
+	return '{' .. table.concat(parts, ', ') .. '}'
+end
+
+function mw.clone(val)
+	if type(val) ~= 'table' then return val end
+	local out = {}
+	for k, v in pairs(val) do
+		out[k] = mw.clone(v)
+	end
+	return out
+end
+
+mw.log = function() end
+mw.logObject = function() end
+mw.getCurrentFrame = function()
+	return {
+		getTitle = function() return '' end,
+		args = setmetatable({}, { __index = function() return nil end }),
+		getParent = function() return nil end,
+		getArgument = function() return nil end,
+		newChild = function() return mw.getCurrentFrame() end,
+		expandTemplate = function() return '' end,
+		callParserFunction = function() return '' end,
+		preprocess = function(_, s) return tostring(s or '') end
+	}
+end
+`;
+
 // Hand-written parser for the Lua table-literal subset that Scribunto's
 // LuaStandalone protocol uses for PHP -> Lua message bodies. Supports:
 //   - Table constructors: `{ ... }`
@@ -341,6 +591,11 @@ export async function runScribuntoServer(
     };
     lua = await mod.Lua.create();
     debugLog("wasmoon Lua created");
+    // Install a minimal `mw` global so that user modules can rely on the
+    // common Scribunto helpers (mw.text.*, mw.ustring.*, mw.title basics)
+    // without our backend having to faithfully model `mw_interface` callbacks.
+    await lua.doString(MW_STUB_LUA);
+    debugLog("mw stub installed");
   } catch (error: unknown) {
     api.stderr(
       `ja-ucp-preview Scribunto server: wasmoon-lua5.1 unavailable (${

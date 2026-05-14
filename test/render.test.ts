@@ -92,6 +92,69 @@ describe("ja ucp renderer", () => {
     expect(result.html).toContain("Lua_OK");
   }, 600_000);
 
+  it("renders Scribunto modules that exercise Lua stdlib + mw.text", async () => {
+    const scribuntoBackend = createPhpWasmBackend({
+      workDir: ".ja-ucp-preview-work/vitest-scribunto-stdlib",
+      scribuntoEnabled: true
+    });
+    const renderer = createJaUcpRenderer({ backend: scribuntoBackend });
+
+    const result = await renderer.render({
+      title: "Claude",
+      wikitext: "{{#invoke:Utility|stitch}}",
+      pageOverrides: {
+        "Module:Utility": {
+          contentModel: "Scribunto",
+          text: [
+            "local p = {}",
+            "function p.stitch(frame)",
+            "  local parts = mw.text.split('one,two,three', ',')",
+            "  local upper = {}",
+            "  for i, v in ipairs(parts) do",
+            "    upper[i] = string.upper(v)",
+            "  end",
+            "  return mw.text.listToText(upper, ' / ')",
+            "end",
+            "return p"
+          ].join("\n")
+        }
+      }
+    });
+
+    expect(result.html).toContain("ONE / TWO / THREE");
+  }, 600_000);
+
+  it("renders Scribunto modules that compute with Lua tables", async () => {
+    const scribuntoBackend = createPhpWasmBackend({
+      workDir: ".ja-ucp-preview-work/vitest-scribunto-tables",
+      scribuntoEnabled: true
+    });
+    const renderer = createJaUcpRenderer({ backend: scribuntoBackend });
+
+    const result = await renderer.render({
+      title: "Claude",
+      wikitext: "{{#invoke:Math|sum}}",
+      pageOverrides: {
+        "Module:Math": {
+          contentModel: "Scribunto",
+          text: [
+            "local p = {}",
+            "function p.sum(frame)",
+            "  local total = 0",
+            "  for _, v in ipairs({1, 2, 3, 4, 5, 6, 7, 8, 9, 10}) do",
+            "    total = total + v",
+            "  end",
+            "  return tostring(total)",
+            "end",
+            "return p"
+          ].join("\n")
+        }
+      }
+    });
+
+    expect(result.html).toContain("55");
+  }, 600_000);
+
   it("includes captured ja-ucp site styles by default without network access", async () => {
     const renderer = createJaUcpRenderer({ backend });
 

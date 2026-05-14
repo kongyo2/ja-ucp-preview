@@ -77,11 +77,22 @@ const { html } = await renderer.render({
 // html contains "Lua_OK"
 ```
 
-Modules that touch `mw.title` / `mw.text` / `mw.html` / etc. are not yet
-fully supported – those require routing PHP-implemented callbacks back into
-Lua synchronously, and `wasmoon-lua5.1` 1.x doesn't expose Promise-await
-semantics that Lua 5.1 could use. Simple modules that only use Lua's
-standard library work end-to-end today.
+The Scribunto server pre-installs a Lua-native `mw` stub into the wasmoon
+environment with the commonly-used Scribunto helpers:
+
+* `mw.text.trim` / `mw.text.split` / `mw.text.gsplit`
+* `mw.text.listToText` / `mw.text.encode` / `mw.text.decode`
+* `mw.text.tag` / `mw.text.truncate` / `mw.text.nowiki`
+* `mw.ustring.*` (len, sub, find, gsub, upper, lower, format, …)
+* `mw.clone`, `mw.allToString`, `mw.dumpObject`, `mw.log`, `mw.logObject`,
+  `mw.getCurrentFrame`
+
+Modules that only depend on these helpers + Lua's standard library run
+end-to-end. Modules that need `mw.title` / `mw.html` / `mw.message` and
+re-enter PHP through `mw_interface` callbacks aren't supported yet –
+`wasmoon-lua5.1` 1.x can't suspend a Lua thread on a Promise-returning JS
+callback, so a full Scribunto-side `mw` would deadlock as soon as it had
+to call back into PHP.
 
 ## Public API
 

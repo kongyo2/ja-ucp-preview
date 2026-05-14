@@ -155,26 +155,12 @@ export class PhpWasmBackend implements RendererBackend {
     await writeFile(requestPath, JSON.stringify(payload), "utf8");
     const responseFile = `${requestPath}.response`;
     // PHP/WASM can throw a wasm "unreachable" trap during script shutdown
-    // (especially when Scribunto destructors run after the bridge has already
-    // produced its JSON payload). The trap escapes the runtime as a
-    // synchronous Error, so install a temporary process-level handler that
-    // swallows it; without this the entire Node process would die.
-    let wasmTrapped = false;
-    const onUncaught = (err: Error) => {
-      if (String(err?.message).includes("unreachable")) {
-        wasmTrapped = true;
-      } else {
-        throw err;
-      }
-    };
-    const onUnhandledRejection = (err: unknown) => {
-      const message = err instanceof Error ? err.message : String(err);
-      if (message.includes("unreachable")) {
-        wasmTrapped = true;
-      }
-    };
-    process.on("uncaughtException", onUncaught);
-    process.on("unhandledRejection", onUnhandledRejection);
+    // (especially when Scribunto destructors run after the bridge has
+    // already produced its JSON payload). Ensure a process-level handler
+    // is installed once, persistently, so the trap doesn't kill Node even
+    // when it fires AFTER renderOnce() has already returned its result.
+    installWasmTrapHandler();
+    const wasmTrappedAtStart = wasmTrapEvents;
 
     const captureBuffer = { stdout: "", stderr: "" };
     try {
@@ -197,7 +183,7 @@ export class PhpWasmBackend implements RendererBackend {
       // the rendered JSON to `<requestPath>.response` BEFORE PHP's shutdown
       // destructor sequence runs, so the file is present even if the wasm
       // runtime later traps and runPhpScript never resolves.
-      const fileWatcher = waitForResponseFile(responseFile, () => wasmTrapped);
+      const fileWatcher = waitForResponseFile(responseFile, () => wasmTrapEvents > wasmTrappedAtStart);
 
       const outcome = await Promise.race([runPromise, fileWatcher]);
 
@@ -222,8 +208,6 @@ export class PhpWasmBackend implements RendererBackend {
 
       throw outcome.error;
     } finally {
-      process.off("uncaughtException", onUncaught);
-      process.off("unhandledRejection", onUnhandledRejection);
       await rm(requestPath, { force: true });
       await rm(responseFile, { force: true });
     }
@@ -498,6 +482,33 @@ function isLuaCommand(argv: string[]): boolean {
 
 export function createPhpWasmBackend(options: PhpWasmBackendOptions = {}): PhpWasmBackend {
   return new PhpWasmBackend(options);
+}
+
+// Track wasm trap events globally so each render can detect "did a trap
+// fire while I was running?" without contesting the process-level handler
+// with other concurrent renders or tests.
+let wasmTrapEvents = 0;
+let wasmTrapHandlerInstalled = false;
+function installWasmTrapHandler(): void {
+  if (wasmTrapHandlerInstalled) return;
+  wasmTrapHandlerInstalled = true;
+  const isWasmTrap = (err: unknown): boolean => {
+    if (!err) return false;
+    const message = err instanceof Error ? err.message : String(err);
+    return message.includes("unreachable") || message.includes("wasm");
+  };
+  process.on("uncaughtException", (err) => {
+    if (isWasmTrap(err)) {
+      wasmTrapEvents++;
+      return;
+    }
+    throw err;
+  });
+  process.on("unhandledRejection", (err) => {
+    if (isWasmTrap(err)) {
+      wasmTrapEvents++;
+    }
+  });
 }
 
 async function waitForResponseFile(
