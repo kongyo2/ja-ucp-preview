@@ -649,11 +649,48 @@ end
 function mw.hash.listAlgorithms() return { 'djb2' } end
 
 -- mw.loadData / mw.loadJsonData ------------------------------------------
+-- Routed through the running coroutine (set up per-call by the JS-side
+-- executeFunction handler) so the JS layer can fetch the requested data
+-- from PHP via the LuaStandalone protocol callbacks.
+local __ja_ucp_loaded_data = {}
+local __ja_ucp_loaded_json = {}
+
 function mw.loadData(name)
-	error("mw.loadData('" .. tostring(name) .. "') is not supported in ja-ucp-preview's offline Scribunto", 2)
+	if type(name) ~= 'string' then
+		error("bad argument #1 to 'mw.loadData' (string expected)", 2)
+	end
+	if __ja_ucp_loaded_data[name] ~= nil then
+		if __ja_ucp_loaded_data[name] == false then
+			error("module '" .. name .. "' not found", 2)
+		end
+		return __ja_ucp_loaded_data[name]
+	end
+	local data = coroutine.yield({ op = 'loadData', name = name })
+	if data == nil then
+		__ja_ucp_loaded_data[name] = false
+		error("module '" .. name .. "' not found", 2)
+	end
+	__ja_ucp_loaded_data[name] = data
+	return data
 end
+
 function mw.loadJsonData(name)
-	error("mw.loadJsonData('" .. tostring(name) .. "') is not supported in ja-ucp-preview's offline Scribunto", 2)
+	if type(name) ~= 'string' then
+		error("bad argument #1 to 'mw.loadJsonData' (string expected)", 2)
+	end
+	if __ja_ucp_loaded_json[name] ~= nil then
+		if __ja_ucp_loaded_json[name] == false then
+			error("module '" .. name .. "' not found", 2)
+		end
+		return __ja_ucp_loaded_json[name]
+	end
+	local data = coroutine.yield({ op = 'loadJsonData', name = name })
+	if data == nil then
+		__ja_ucp_loaded_json[name] = false
+		error("module '" .. name .. "' not found", 2)
+	end
+	__ja_ucp_loaded_json[name] = data
+	return data
 end
 
 mw.getCurrentFrame = function()
@@ -1431,6 +1468,10 @@ if type(ret) == 'table' then
 			end
 		end
 		return encode({ kind = 'callParserFunction', name = tostring(ret.name or ''), args = args_s })
+	elseif ret.op == 'loadData' then
+		return encode({ kind = 'loadData', name = tostring(ret.name or '') })
+	elseif ret.op == 'loadJsonData' then
+		return encode({ kind = 'loadJsonData', name = tostring(ret.name or '') })
 	end
 end
 return encode({ kind = 'unknown', value = tostring(ret) })
@@ -1470,6 +1511,27 @@ return encode({ kind = 'unknown', value = tostring(ret) })
               const cpArgs = (step.args ?? {}) as Record<string, string> | string[];
               const out = await dispatchScalar("callParserFunction", "current", fnName, cpArgs);
               await lua.doString(`__ja_ucp_resume_value = ${JSON.stringify(String(out ?? ""))}`);
+              continue;
+            }
+            if (step.kind === "loadData") {
+              const moduleName = String(step.name ?? "");
+              // mw.loadData expects to run the Lua module and get back its
+              // returned table. We can't easily marshal arbitrary Lua tables
+              // back into Lua, so the simplest correct path is: send the
+              // PHP-side loadPackage call which returns a Scribunto chunk
+              // reference, then execute that chunk in our wasmoon state
+              // and bind the resulting table to a global the resume code
+              // unwraps. Concretely: locate the source by asking PHP for
+              // the page content, compile + run it in wasmoon, and resume
+              // with the result.
+              const loaded = await loadModuleData(moduleName);
+              await lua.doString(`__ja_ucp_resume_value = ${loaded}`);
+              continue;
+            }
+            if (step.kind === "loadJsonData") {
+              const moduleName = String(step.name ?? "");
+              const loaded = await loadJsonModuleData(moduleName);
+              await lua.doString(`__ja_ucp_resume_value = ${loaded}`);
               continue;
             }
             await lua.doString("__ja_ucp_resume_value = nil");
@@ -1703,6 +1765,99 @@ return result`;
       parts.push(`${luaKey} = ${JSON.stringify(v)}`);
     }
     return `{${parts.join(", ")}}`;
+  }
+
+  async function loadModuleData(moduleName: string): Promise<string> {
+    // Use the loadPackage callback Scribunto registers for us. It returns
+    // a Scribunto_LuaStandaloneInterpreterFunction reference (chunks[N]).
+    // The chunk source has been delivered to us via a nested `loadString`
+    // call inside loadPackage, so our chunks Map already knows it. Run
+    // that chunk in wasmoon and bind the result into a Lua table literal
+    // we can paste back into the resume statement.
+    const fnId = registeredFuncs.get("loadPackage");
+    if (!fnId) return "nil";
+    const reply = await dispatchToPhp({
+      op: "call",
+      id: fnId,
+      nargs: 1,
+      args: { 1: moduleName }
+    });
+    if (reply.op !== "return") return "nil";
+    const values = (reply.values as Record<string, unknown>) ?? {};
+    const ref = values["1"];
+    if (
+      typeof ref !== "object" ||
+      ref === null ||
+      typeof (ref as { __scribunto_function_id__?: unknown }).__scribunto_function_id__ !== "number"
+    ) {
+      return "nil";
+    }
+    const chunkId = (ref as { __scribunto_function_id__: number }).__scribunto_function_id__;
+    const chunk = chunks.get(chunkId);
+    if (!chunk) return "nil";
+    // Compile + execute the chunk source, then JSON-encode the returned
+    // value through Lua so we can paste it as a Lua literal into the
+    // resume statement.
+    const slot = `__ja_ucp_loaded_${chunkId}`;
+    try {
+      const luaCode = `
+local fn, err = loadstring(${JSON.stringify(chunk.source)}, ${JSON.stringify(chunk.chunkName)})
+if not fn then return 'ERROR:' .. tostring(err) end
+local ok, val = pcall(fn)
+if not ok then return 'ERROR:' .. tostring(val) end
+${slot} = val
+return ''
+`;
+      const result = (await lua.doString(luaCode)) as string;
+      if (typeof result === "string" && result.startsWith("ERROR:")) {
+        debugLog(`loadModuleData ${moduleName}: ${result}`);
+        return "nil";
+      }
+      return slot;
+    } catch (err) {
+      debugLog(`loadModuleData ${moduleName} failed: ${err instanceof Error ? err.message : String(err)}`);
+      return "nil";
+    }
+  }
+
+  async function loadJsonModuleData(moduleName: string): Promise<string> {
+    const fnId = registeredFuncs.get("loadJsonData");
+    if (!fnId) return "nil";
+    const reply = await dispatchToPhp({
+      op: "call",
+      id: fnId,
+      nargs: 1,
+      args: { 1: moduleName }
+    });
+    if (reply.op !== "return") return "nil";
+    const values = (reply.values as Record<string, unknown>) ?? {};
+    const data = values["1"];
+    if (data === null || data === undefined) return "nil";
+    return jsToLuaLiteral(data);
+  }
+
+  function jsToLuaLiteral(value: unknown, depth = 0): string {
+    if (depth > 100) return "nil";
+    if (value === null || value === undefined) return "nil";
+    if (typeof value === "boolean") return value ? "true" : "false";
+    if (typeof value === "number") {
+      if (!Number.isFinite(value)) return "nil";
+      return String(value);
+    }
+    if (typeof value === "string") return JSON.stringify(value);
+    if (Array.isArray(value)) {
+      return "{" + value.map((v) => jsToLuaLiteral(v, depth + 1)).join(", ") + "}";
+    }
+    if (typeof value === "object") {
+      const parts: string[] = [];
+      for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+        const isInt = /^-?\d+$/.test(k);
+        const luaKey = isInt ? `[${k}]` : `[${JSON.stringify(k)}]`;
+        parts.push(`${luaKey} = ${jsToLuaLiteral(v, depth + 1)}`);
+      }
+      return "{" + parts.join(", ") + "}";
+    }
+    return "nil";
   }
 
   function stringifyLuaValue(value: unknown): unknown {

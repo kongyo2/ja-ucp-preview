@@ -111,10 +111,15 @@ expanded server-side. Nested `mw_interface` callbacks PHP makes while it's
 serving our request are dispatched inline against the same protocol loop
 (mirroring MWServer.lua's `dispatch`).
 
-`mw.loadData` / `mw.loadJsonData` raise an explicit error – they need
-multi-render shared state which we deliberately don't support in an
-offline previewer. Modules that need them should resolve their data via
-the renderer's `pageOverrides` instead.
+`mw.loadData` / `mw.loadJsonData` go through Scribunto's standard
+`loadPackage` / `loadJsonData` callbacks. The backend dispatches them
+back to PHP, then executes the resulting chunk inside wasmoon (for Lua
+data) or marshals the parsed JSON into a Lua table (for JSON data).
+Per-render caching matches Scribunto's normal semantics – the value is
+shared across all `mw.loadData` calls within the same `#invoke`. Page
+content is sourced via the renderer's `pageOverrides`, so callers can
+register a `Module:DataTable` entry and have `mw.loadData('Module:DataTable')`
+return its table.
 
 ## Public API
 

@@ -416,6 +416,38 @@ describe("ja ucp renderer", () => {
     expect(result.html).toContain("42");
   }, 600_000);
 
+  it("renders Scribunto modules that load Lua data tables via mw.loadData", async () => {
+    const scribuntoBackend = createPhpWasmBackend({
+      workDir: ".ja-ucp-preview-work/vitest-scribunto-loaddata",
+      scribuntoEnabled: true
+    });
+    const renderer = createJaUcpRenderer({ backend: scribuntoBackend });
+
+    const result = await renderer.render({
+      title: "Claude",
+      wikitext: "{{#invoke:Reader|render}}",
+      pageOverrides: {
+        "Module:DataTable": {
+          contentModel: "Scribunto",
+          text: "return { greeting = 'hello-from-data', items = { 'a', 'b', 'c' } }"
+        },
+        "Module:Reader": {
+          contentModel: "Scribunto",
+          text: [
+            "local p = {}",
+            "function p.render(frame)",
+            "  local data = mw.loadData('Module:DataTable')",
+            "  return data.greeting .. ' / ' .. data.items[1] .. data.items[2] .. data.items[3]",
+            "end",
+            "return p"
+          ].join("\n")
+        }
+      }
+    });
+
+    expect(result.html).toContain("hello-from-data / abc");
+  }, 600_000);
+
   it("renders Scribunto modules that use mw.message", async () => {
     const scribuntoBackend = createPhpWasmBackend({
       workDir: ".ja-ucp-preview-work/vitest-scribunto-message",
