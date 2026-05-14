@@ -155,6 +155,120 @@ describe("ja ucp renderer", () => {
     expect(result.html).toContain("55");
   }, 600_000);
 
+  it("renders Scribunto modules that read mw.title.getCurrentTitle()", async () => {
+    const scribuntoBackend = createPhpWasmBackend({
+      workDir: ".ja-ucp-preview-work/vitest-scribunto-title",
+      scribuntoEnabled: true
+    });
+    const renderer = createJaUcpRenderer({ backend: scribuntoBackend });
+
+    const result = await renderer.render({
+      title: "アンサイクロペディア",
+      wikitext: "{{#invoke:Title|here}}",
+      pageOverrides: {
+        "Module:Title": {
+          contentModel: "Scribunto",
+          text: [
+            "local p = {}",
+            "function p.here(frame)",
+            "  local t = mw.title.getCurrentTitle()",
+            "  return 'page=' .. t.text .. ' ns=' .. tostring(t.namespace)",
+            "end",
+            "return p"
+          ].join("\n")
+        }
+      }
+    });
+
+    expect(result.html).toContain("page=アンサイクロペディア");
+    expect(result.html).toContain("ns=0");
+  }, 600_000);
+
+  it("renders Scribunto modules that build HTML via mw.html", async () => {
+    const scribuntoBackend = createPhpWasmBackend({
+      workDir: ".ja-ucp-preview-work/vitest-scribunto-html",
+      scribuntoEnabled: true
+    });
+    const renderer = createJaUcpRenderer({ backend: scribuntoBackend });
+
+    const result = await renderer.render({
+      title: "Claude",
+      wikitext: "{{#invoke:Box|render}}",
+      pageOverrides: {
+        "Module:Box": {
+          contentModel: "Scribunto",
+          text: [
+            "local p = {}",
+            "function p.render(frame)",
+            "  local root = mw.html.create('div'):addClass('ja-ucp-box'):css('color', 'red')",
+            "  root:tag('span'):wikitext('hi')",
+            "  return tostring(root:allDone())",
+            "end",
+            "return p"
+          ].join("\n")
+        }
+      }
+    });
+
+    expect(result.html).toContain('class="ja-ucp-box"');
+    expect(result.html).toContain("color: red");
+    expect(result.html).toContain("<span>hi</span>");
+  }, 600_000);
+
+  it("renders Scribunto modules that format URLs via mw.uri", async () => {
+    const scribuntoBackend = createPhpWasmBackend({
+      workDir: ".ja-ucp-preview-work/vitest-scribunto-uri",
+      scribuntoEnabled: true
+    });
+    const renderer = createJaUcpRenderer({ backend: scribuntoBackend });
+
+    const result = await renderer.render({
+      title: "Claude",
+      wikitext: "{{#invoke:Link|render}}",
+      pageOverrides: {
+        "Module:Link": {
+          contentModel: "Scribunto",
+          text: [
+            "local p = {}",
+            "function p.render(frame)",
+            "  return mw.uri.localUrl('Hello World', { x = 'y' })",
+            "end",
+            "return p"
+          ].join("\n")
+        }
+      }
+    });
+
+    expect(result.html).toContain("/wiki/Hello_World?x=y");
+  }, 600_000);
+
+  it("renders Scribunto modules that use mw.message", async () => {
+    const scribuntoBackend = createPhpWasmBackend({
+      workDir: ".ja-ucp-preview-work/vitest-scribunto-message",
+      scribuntoEnabled: true
+    });
+    const renderer = createJaUcpRenderer({ backend: scribuntoBackend });
+
+    const result = await renderer.render({
+      title: "Claude",
+      wikitext: "{{#invoke:Msg|render}}",
+      pageOverrides: {
+        "Module:Msg": {
+          contentModel: "Scribunto",
+          text: [
+            "local p = {}",
+            "function p.render(frame)",
+            "  return mw.message.newRawMessage('hello $1 world $2'):params('A', 'B'):plain()",
+            "end",
+            "return p"
+          ].join("\n")
+        }
+      }
+    });
+
+    expect(result.html).toContain("hello A world B");
+  }, 600_000);
+
   it("includes captured ja-ucp site styles by default without network access", async () => {
     const renderer = createJaUcpRenderer({ backend });
 

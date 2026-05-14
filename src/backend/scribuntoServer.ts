@@ -268,9 +268,397 @@ end
 
 mw.log = function() end
 mw.logObject = function() end
+
+-- mw.title --------------------------------------------------------------
+-- Render-time title information. Populated via __ja_ucp_set_context which
+-- the Scribunto server invokes at boot with the current page's metadata.
+__ja_ucp_context = {
+	title = '',
+	ns = 0,
+	nsName = '',
+	pageName = '',
+	wgServer = '',
+	wgArticlePath = '/wiki/$1',
+	lang = 'ja'
+}
+
+function __ja_ucp_set_context(ctx)
+	for k, v in pairs(ctx) do __ja_ucp_context[k] = v end
+end
+
+local title_mt = { __tostring = function(self) return self.prefixedText end }
+local function make_title(args)
+	local text = tostring(args.text or '')
+	local ns = tonumber(args.ns) or 0
+	local nsName = tostring(args.nsName or '')
+	local prefixedText = (nsName ~= '' and (nsName .. ':') or '') .. text
+	local urlPath = (__ja_ucp_context.wgArticlePath or '/wiki/$1'):gsub('%$1', (prefixedText:gsub(' ', '_')))
+	local t = setmetatable({
+		isLocal = true,
+		isRedirect = false,
+		exists = false,
+		fileExists = false,
+		text = text,
+		prefixedText = prefixedText,
+		fullText = prefixedText,
+		rootText = text,
+		baseText = text,
+		subpageText = text,
+		canTalk = ns ~= -1,
+		namespace = ns,
+		id = 0,
+		fragment = '',
+		interwiki = '',
+		contentModel = ns == 828 and 'Scribunto' or 'wikitext',
+		nsText = nsName,
+		subjectNsText = nsName,
+		talkNsText = nsName .. (nsName ~= '' and ' talk' or 'Talk'),
+		fileUrl = '',
+		fullUrl = (__ja_ucp_context.wgServer or '') .. urlPath,
+		canonicalUrl = (__ja_ucp_context.wgServer or '') .. urlPath,
+		localUrl = urlPath
+	}, title_mt)
+	function t:getContent() return nil end
+	function t:isSubpageOf() return false end
+	function t:partialUrl() return (self.text:gsub(' ', '_')) end
+	function t:inNamespace(query)
+		return tonumber(query) == self.namespace or tostring(query) == self.nsText
+	end
+	function t:inNamespaces(...)
+		for _, n in ipairs({...}) do
+			if self:inNamespace(n) then return true end
+		end
+		return false
+	end
+	function t:hasSubjectNamespace(query) return self:inNamespace(query) end
+	function t:subPageTitle(t2)
+		return make_title({ text = self.text .. '/' .. tostring(t2), ns = self.namespace, nsName = self.nsText })
+	end
+	return t
+end
+
+mw.title = {}
+
+function mw.title.makeTitle(ns, text, fragment, interwiki)
+	if text == nil then return nil end
+	return make_title({ text = tostring(text), ns = ns, nsName = '' })
+end
+
+function mw.title.new(text, ns)
+	if text == nil then return nil end
+	return make_title({ text = tostring(text), ns = ns or 0, nsName = '' })
+end
+
+function mw.title.getCurrentTitle()
+	return make_title({
+		text = __ja_ucp_context.pageName ~= '' and __ja_ucp_context.pageName or __ja_ucp_context.title,
+		ns = __ja_ucp_context.ns,
+		nsName = __ja_ucp_context.nsName
+	})
+end
+
+function mw.title.equals(a, b)
+	if type(a) ~= 'table' or type(b) ~= 'table' then return false end
+	return a.prefixedText == b.prefixedText
+end
+function mw.title.compare(a, b)
+	local ap = type(a) == 'table' and a.prefixedText or tostring(a)
+	local bp = type(b) == 'table' and b.prefixedText or tostring(b)
+	if ap < bp then return -1 end
+	if ap > bp then return 1 end
+	return 0
+end
+
+-- mw.uri ----------------------------------------------------------------
+mw.uri = {}
+
+local function uri_encode(s, kind)
+	s = tostring(s or '')
+	if kind == 'WIKI' then
+		s = s:gsub(' ', '_')
+		return (s:gsub('([^%w%-_./~:_])', function(c)
+			return string.format('%%%02X', c:byte())
+		end))
+	end
+	return (s:gsub('([^%w%-_.~])', function(c)
+		if c == ' ' and kind == 'QUERY' then return '+' end
+		return string.format('%%%02X', c:byte())
+	end))
+end
+
+function mw.uri.encode(s, kind) return uri_encode(s, kind or 'QUERY') end
+function mw.uri.decode(s, kind)
+	s = tostring(s or '')
+	if kind == 'QUERY' then s = s:gsub('+', ' ') end
+	return (s:gsub('%%(%x%x)', function(hex)
+		return string.char(tonumber(hex, 16))
+	end))
+end
+function mw.uri.anchorEncode(s)
+	s = tostring(s or ''):gsub(' ', '_')
+	return s
+end
+
+function mw.uri.localUrl(page, query)
+	page = tostring(page or '')
+	local url = (__ja_ucp_context.wgArticlePath or '/wiki/$1'):gsub('%$1', (page:gsub(' ', '_')))
+	if type(query) == 'table' then
+		local parts = {}
+		for k, v in pairs(query) do
+			parts[#parts + 1] = uri_encode(tostring(k), 'QUERY') .. '=' .. uri_encode(tostring(v), 'QUERY')
+		end
+		if #parts > 0 then url = url .. '?' .. table.concat(parts, '&') end
+	elseif type(query) == 'string' and query ~= '' then
+		url = url .. '?' .. query
+	end
+	return url
+end
+function mw.uri.fullUrl(page, query) return (__ja_ucp_context.wgServer or '') .. mw.uri.localUrl(page, query) end
+mw.uri.canonicalUrl = mw.uri.fullUrl
+
+function mw.uri.new(s) return { tostring = function() return tostring(s) end } end
+function mw.uri.parse(s) return mw.uri.new(s) end
+
+-- mw.message ------------------------------------------------------------
+local Message = {}
+Message.__index = Message
+function Message:params(...)
+	self.parameters = self.parameters or {}
+	for _, v in ipairs({...}) do self.parameters[#self.parameters + 1] = v end
+	return self
+end
+function Message:rawParams(...) return self:params(...) end
+function Message:numParams(...) return self:params(...) end
+function Message:inLanguage(lang) self.language = lang; return self end
+function Message:useDatabase(use) self.useDatabaseFlag = use; return self end
+function Message:plain()
+	local s = self.key or ''
+	if self.parameters then
+		for i, v in ipairs(self.parameters) do
+			s = s:gsub('%$' .. i, tostring(v))
+		end
+	end
+	return s
+end
+function Message:text() return self:plain() end
+function Message:escaped() return mw.text.encode(self:plain()) end
+function Message:parse() return self:plain() end
+function Message:exists() return false end
+function Message:isBlank() return false end
+function Message:isDisabled() return false end
+
+mw.message = {}
+function mw.message.new(key, ...)
+	return setmetatable({ key = tostring(key), parameters = {...} }, Message)
+end
+mw.message.newRawMessage = mw.message.new
+function mw.message.newFallbackSequence(...) return mw.message.new((...)) end
+function mw.message.getDefaultLanguage() return __ja_ucp_context.lang or 'ja' end
+function mw.message.rawParam(v) return v end
+function mw.message.numParam(v) return v end
+
+-- mw.language -----------------------------------------------------------
+local Language = {}
+Language.__index = Language
+function Language:getCode() return self.code end
+function Language:isRTL() return false end
+function Language:formatNum(n) return tostring(n) end
+function Language:formatDate(format, timestamp, local_) return tostring(timestamp or os.date()) end
+function Language:formatDuration(seconds) return string.format('%d seconds', seconds or 0) end
+function Language:caseFold(s) return string.lower(tostring(s or '')) end
+function Language:lc(s) return string.lower(tostring(s or '')) end
+function Language:uc(s) return string.upper(tostring(s or '')) end
+function Language:lcfirst(s)
+	s = tostring(s or '')
+	return string.lower(s:sub(1, 1)) .. s:sub(2)
+end
+function Language:ucfirst(s)
+	s = tostring(s or '')
+	return string.upper(s:sub(1, 1)) .. s:sub(2)
+end
+function Language:plain(s) return tostring(s or '') end
+
+mw.language = {}
+function mw.language.new(code) return setmetatable({ code = tostring(code or 'ja') }, Language) end
+function mw.language.getContentLanguage() return mw.language.new(__ja_ucp_context.lang or 'ja') end
+mw.language.getFallbacksFor = function() return {} end
+mw.language.isKnownLanguageTag = function() return true end
+mw.language.isSupportedLanguage = function() return true end
+mw.language.isValidCode = function() return true end
+mw.language.fetchLanguageName = function(code) return tostring(code or '') end
+mw.language.fetchLanguageNames = function() return {} end
+
+-- mw.site ---------------------------------------------------------------
+mw.site = {
+	siteName = 'Uncyclopedia',
+	server = '',
+	currentVersion = 'MediaWiki 1.39.3',
+	scriptPath = '',
+	stylePath = '/skins',
+	namespaces = setmetatable({}, { __index = function() return nil end }),
+	contentNamespaces = setmetatable({}, { __index = function() return nil end })
+}
+function mw.site.stats() return { pages = 0, articles = 0, files = 0, edits = 0, users = 0, activeUsers = 0, admins = 0 } end
+
+-- mw.html (builder pattern) ---------------------------------------------
+local HtmlBuilder = {}
+HtmlBuilder.__index = HtmlBuilder
+
+local void_tags = {
+	area = true, base = true, br = true, col = true, embed = true, hr = true,
+	img = true, input = true, link = true, meta = true, param = true,
+	source = true, track = true, wbr = true
+}
+
+function HtmlBuilder:_attrString()
+	if not self._attrs or not next(self._attrs) then return '' end
+	local out = {}
+	for k, v in pairs(self._attrs) do
+		if v == true then
+			out[#out + 1] = ' ' .. tostring(k)
+		elseif v ~= nil and v ~= false then
+			out[#out + 1] = ' ' .. tostring(k) .. '="' .. mw.text.encode(tostring(v)) .. '"'
+		end
+	end
+	return table.concat(out)
+end
+
+function HtmlBuilder:_styleString()
+	if not self._style or not next(self._style) then return '' end
+	local props = {}
+	for k, v in pairs(self._style) do
+		props[#props + 1] = tostring(k) .. ': ' .. tostring(v)
+	end
+	if #props == 0 then return '' end
+	return ' style="' .. mw.text.encode(table.concat(props, '; ')) .. '"'
+end
+
+function HtmlBuilder:_classString()
+	if not self._classes or #self._classes == 0 then return '' end
+	return ' class="' .. mw.text.encode(table.concat(self._classes, ' ')) .. '"'
+end
+
+function HtmlBuilder:tag(name, attrs)
+	local child = setmetatable({
+		_tag = tostring(name or ''),
+		_children = {},
+		_attrs = attrs and mw.clone(attrs) or {},
+		_classes = {},
+		_style = {},
+		_parent = self
+	}, HtmlBuilder)
+	self._children[#self._children + 1] = child
+	return child
+end
+
+function HtmlBuilder:attr(key, value)
+	if type(key) == 'table' then
+		for k, v in pairs(key) do self._attrs[k] = v end
+	else
+		self._attrs[key] = value
+	end
+	return self
+end
+
+function HtmlBuilder:addClass(c)
+	if c == nil then return self end
+	self._classes[#self._classes + 1] = tostring(c)
+	return self
+end
+
+function HtmlBuilder:css(key, value)
+	if type(key) == 'table' then
+		for k, v in pairs(key) do self._style[k] = v end
+	else
+		self._style[key] = value
+	end
+	return self
+end
+
+function HtmlBuilder:cssText(text)
+	self._style[#self._style + 1] = tostring(text or '')
+	return self
+end
+
+function HtmlBuilder:wikitext(...)
+	for _, v in ipairs({...}) do
+		self._children[#self._children + 1] = { _raw = tostring(v) }
+	end
+	return self
+end
+
+function HtmlBuilder:newline()
+	self._children[#self._children + 1] = { _raw = '\\n' }
+	return self
+end
+
+function HtmlBuilder:node(n)
+	self._children[#self._children + 1] = n
+	return self
+end
+
+function HtmlBuilder:done() return self._parent or self end
+function HtmlBuilder:allDone()
+	local root = self
+	while root._parent do root = root._parent end
+	return root
+end
+
+function HtmlBuilder:_serializeChildren()
+	local buf = {}
+	for _, child in ipairs(self._children) do
+		if child._raw ~= nil then
+			buf[#buf + 1] = child._raw
+		else
+			buf[#buf + 1] = tostring(child)
+		end
+	end
+	return table.concat(buf)
+end
+
+HtmlBuilder.__tostring = function(self)
+	if not self._tag or self._tag == '' then
+		return self:_serializeChildren()
+	end
+	local open = '<' .. self._tag .. self:_classString() .. self:_styleString() .. self:_attrString()
+	if void_tags[self._tag] then return open .. ' />' end
+	return open .. '>' .. self:_serializeChildren() .. '</' .. self._tag .. '>'
+end
+
+mw.html = {}
+function mw.html.create(name, args)
+	return setmetatable({
+		_tag = name and tostring(name) or '',
+		_children = {},
+		_attrs = args and mw.clone(args.attrs or {}) or {},
+		_classes = {},
+		_style = {},
+		_parent = nil
+	}, HtmlBuilder)
+end
+
+-- mw.hash (lightweight, deterministic, not crypto-grade) ----------------
+mw.hash = {}
+function mw.hash.hashValue(algo, value)
+	local h = 5381
+	for i = 1, #tostring(value or '') do
+		h = ((h * 33) + tostring(value):byte(i)) % 0x100000000
+	end
+	return string.format('%08x', h)
+end
+function mw.hash.listAlgorithms() return { 'djb2' } end
+
+-- mw.loadData / mw.loadJsonData ------------------------------------------
+function mw.loadData(name)
+	error("mw.loadData('" .. tostring(name) .. "') is not supported in ja-ucp-preview's offline Scribunto", 2)
+end
+function mw.loadJsonData(name)
+	error("mw.loadJsonData('" .. tostring(name) .. "') is not supported in ja-ucp-preview's offline Scribunto", 2)
+end
+
 mw.getCurrentFrame = function()
 	return {
-		getTitle = function() return '' end,
+		getTitle = function() return __ja_ucp_context.title or '' end,
 		args = setmetatable({}, { __index = function() return nil end }),
 		getParent = function() return nil end,
 		getArgument = function() return nil end,
@@ -532,6 +920,21 @@ export interface SpawnApi {
   on(eventName: "stdin", handler: (data: ArrayBuffer | Uint8Array) => void): void;
 }
 
+export interface RenderContextForLua {
+  title: string;
+  ns: number;
+  nsName: string;
+  pageName: string;
+  wgServer: string;
+  wgArticlePath: string;
+  lang: string;
+}
+
+let currentRenderContext: RenderContextForLua | null = null;
+export function setCurrentRenderContext(ctx: RenderContextForLua | null): void {
+  currentRenderContext = ctx;
+}
+
 interface ScribuntoMessage {
   op: string;
   [key: string]: unknown;
@@ -595,6 +998,20 @@ export async function runScribuntoServer(
     // common Scribunto helpers (mw.text.*, mw.ustring.*, mw.title basics)
     // without our backend having to faithfully model `mw_interface` callbacks.
     await lua.doString(MW_STUB_LUA);
+    if (currentRenderContext) {
+      const c = currentRenderContext;
+      await lua.doString(
+        `__ja_ucp_set_context({` +
+          `title=${JSON.stringify(c.title)},` +
+          `ns=${c.ns},` +
+          `nsName=${JSON.stringify(c.nsName)},` +
+          `pageName=${JSON.stringify(c.pageName)},` +
+          `wgServer=${JSON.stringify(c.wgServer)},` +
+          `wgArticlePath=${JSON.stringify(c.wgArticlePath)},` +
+          `lang=${JSON.stringify(c.lang)}` +
+          `})`
+      );
+    }
     debugLog("mw stub installed");
   } catch (error: unknown) {
     api.stderr(

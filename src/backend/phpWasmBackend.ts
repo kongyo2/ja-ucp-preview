@@ -9,7 +9,8 @@ import {
   jaUncyclopediaSkinStyleTitles,
   siteStylePageOverrides
 } from "../site/styles.js";
-import { runScribuntoServer, type SpawnApi } from "./scribuntoServer.js";
+import { runScribuntoServer, setCurrentRenderContext, type SpawnApi } from "./scribuntoServer.js";
+import { parseTitle } from "../site/title.js";
 
 export interface PhpWasmBackendOptions {
   mediaWikiRoot?: string;
@@ -162,6 +163,23 @@ export class PhpWasmBackend implements RendererBackend {
     installWasmTrapHandler();
     const wasmTrappedAtStart = wasmTrapEvents;
 
+    // Pass the rendered title into the Lua-side mw stub so mw.title.* gives
+    // sensible answers without needing PHP callbacks.
+    try {
+      const parsed = parseTitle(request.title, context.site);
+      setCurrentRenderContext({
+        title: parsed.prefixedText,
+        ns: parsed.namespaceId,
+        nsName: parsed.namespace.name,
+        pageName: parsed.text,
+        wgServer: context.site.server,
+        wgArticlePath: context.site.articlePath,
+        lang: context.site.lang
+      });
+    } catch {
+      setCurrentRenderContext(null);
+    }
+
     const captureBuffer = { stdout: "", stderr: "" };
     try {
       const runPromise = runPhpScript(
@@ -208,6 +226,7 @@ export class PhpWasmBackend implements RendererBackend {
 
       throw outcome.error;
     } finally {
+      setCurrentRenderContext(null);
       await rm(requestPath, { force: true });
       await rm(responseFile, { force: true });
     }
