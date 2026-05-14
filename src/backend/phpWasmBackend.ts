@@ -9,6 +9,7 @@ import {
   jaUncyclopediaSkinStyleTitles,
   siteStylePageOverrides
 } from "../site/styles.js";
+import { runScribuntoServer, type SpawnApi } from "./scribuntoServer.js";
 
 export interface PhpWasmBackendOptions {
   mediaWikiRoot?: string;
@@ -100,6 +101,8 @@ export class PhpWasmBackend implements RendererBackend {
   private phpPromise?: Promise<PhpInstance>;
   private renderQueue: Promise<unknown> = Promise.resolve();
 
+  private readonly luaStubPath: string;
+
   constructor(options: PhpWasmBackendOptions = {}) {
     const packageRoot = findPackageRoot();
     this.mediaWikiRoot = resolve(options.mediaWikiRoot ?? join(packageRoot, "vendor", "mediawiki-1.39.3"));
@@ -108,6 +111,7 @@ export class PhpWasmBackend implements RendererBackend {
     this.forceReinstall = options.forceReinstall ?? false;
     this.bridgePath = join(packageRoot, "src", "php", "ja-ucp-render.php");
     this.scribuntoEnabled = options.scribuntoEnabled ?? false;
+    this.luaStubPath = join(this.workDir, "scribunto-lua-stub.sh");
   }
 
   async render(request: RenderRequest, context: RenderContext): Promise<RenderResult> {
@@ -200,6 +204,10 @@ export class PhpWasmBackend implements RendererBackend {
     await mkdir(tmpDir, { recursive: true });
     await mkdir(requestsDir, { recursive: true });
 
+    if (this.scribuntoEnabled) {
+      await ensureLuaStub(this.luaStubPath);
+    }
+
     if (!existsSync(markerPath) || !existsSync(dbPath) || !existsSync(localSettingsPath)) {
       await rm(root, { recursive: true, force: true });
       await mkdir(sqliteDir, { recursive: true });
@@ -231,7 +239,14 @@ export class PhpWasmBackend implements RendererBackend {
 
       await writeFile(
         localSettingsPath,
-        createLocalSettings(this.mediaWikiRoot, sqliteDir, cacheDir, tmpDir, this.scribuntoEnabled),
+        createLocalSettings(
+          this.mediaWikiRoot,
+          sqliteDir,
+          cacheDir,
+          tmpDir,
+          this.scribuntoEnabled,
+          this.luaStubPath
+        ),
         "utf8"
       );
 
@@ -301,8 +316,14 @@ echo 'ok';
     const createSpawnHandler = (utilMod as { createSpawnHandler: (program: (cmd: string[], api: SpawnProcessApi, options: { cwd?: string; env?: Record<string, string> }) => void | Promise<void>) => unknown })
       .createSpawnHandler;
     if (typeof (php as unknown as { setSpawnHandler?: unknown }).setSpawnHandler === "function" && typeof createSpawnHandler === "function") {
+      const scribuntoEnabled = this.scribuntoEnabled;
       await (php as unknown as { setSpawnHandler: (h: unknown) => Promise<void> }).setSpawnHandler(
-        createSpawnHandler((argv, api) => {
+        createSpawnHandler(async (argvIn, api, options) => {
+          const argv = unwrapShellArgv(argvIn);
+          if (scribuntoEnabled && isLuaCommand(argv)) {
+            await runScribuntoServer(argv, api as unknown as SpawnApi, options);
+            return;
+          }
           api.notifySpawn();
           api.stderr(`ja-ucp-preview: blocked spawn ${argv.join(" ")}\n`);
           api.exit(127);
@@ -319,6 +340,85 @@ interface SpawnProcessApi {
   stdout(data: string | ArrayBuffer): void;
   stderr(data: string | ArrayBuffer): void;
   exit(code: number): void;
+  on?(eventName: string, handler: (data: ArrayBuffer | Uint8Array) => void): void;
+}
+
+function unwrapShellArgv(argv: string[]): string[] {
+  // The sandboxed Spawn API hands us argv after PHP's proc_open call. On Linux
+  // Scribunto wraps the lua invocation in /bin/sh `lua_ulimit.sh` `… "exec
+  // <cmd>"`, and the wrapper script itself runs `eval "exec $4"` on the last
+  // arg, so peel off both the shell wrapper and ulimit prefix until we see the
+  // actual lua command.
+  let out = [...argv];
+  for (let i = 0; i < 4; i++) {
+    if (out[0] === "exec") out.shift();
+    if (out[0] === "/bin/sh" && out[1] === "-c" && typeof out[2] === "string") {
+      out = splitShellCommand(out[2]);
+      continue;
+    }
+    if (out[0] && out[0].endsWith("/lua_ulimit.sh")) {
+      // lua_ulimit.sh <cpu_soft> <cpu_hard> <mem_kb> <actual cmd as single arg>
+      const rest = out[4];
+      if (typeof rest === "string") {
+        out = splitShellCommand(rest);
+        continue;
+      }
+      out = out.slice(4);
+      continue;
+    }
+    break;
+  }
+  if (out[0] === "exec") out.shift();
+  return out;
+}
+
+function splitShellCommand(line: string): string[] {
+  const tokens: string[] = [];
+  let buffer = "";
+  let quote: '"' | "'" | null = null;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (quote) {
+      if (c === quote) {
+        quote = null;
+      } else if (c === "\\" && i + 1 < line.length) {
+        buffer += line[++i];
+      } else {
+        buffer += c;
+      }
+    } else if (c === '"' || c === "'") {
+      quote = c;
+    } else if (c === " " || c === "\t") {
+      if (buffer.length > 0) {
+        tokens.push(buffer);
+        buffer = "";
+      }
+    } else if (c === "\\" && i + 1 < line.length) {
+      buffer += line[++i];
+    } else {
+      buffer += c;
+    }
+  }
+  if (buffer.length > 0) tokens.push(buffer);
+  return tokens;
+}
+
+function isLuaCommand(argv: string[]): boolean {
+  const head = argv[0];
+  if (!head) return false;
+  const base = head.split("/").pop() ?? head;
+  if (
+    base === "lua" ||
+    base === "lua5.1" ||
+    base === "lua5.1.exe" ||
+    base === "lua.exe" ||
+    base === "scribunto-lua-stub.sh"
+  ) {
+    return true;
+  }
+  // Heuristic: if any of the args points at mw_main.lua, this is a Scribunto
+  // standalone invocation regardless of the lua binary's actual name.
+  return argv.some((a) => a.endsWith("mw_main.lua"));
 }
 
 export function createPhpWasmBackend(options: PhpWasmBackendOptions = {}): PhpWasmBackend {
@@ -431,12 +531,29 @@ function siteStyleTitlesForSkin(skin: string): string[] {
   ];
 }
 
+async function ensureLuaStub(path: string): Promise<void> {
+  // PHP's `is_executable($luaPath)` is called before proc_open. Under PHP/WASM
+  // the actual Linux ELF binary that Scribunto bundles can't be executed, and
+  // even on hosts that have lua5.1 we deliberately route the call to our
+  // wasmoon-lua5.1-based server. We create a small executable shell stub
+  // simply so that `is_executable()` returns true – proc_open() is then
+  // intercepted by our spawn handler.
+  const { chmod, writeFile } = await import("node:fs/promises");
+  await writeFile(path, "#!/bin/sh\nexit 0\n", "utf8");
+  try {
+    await chmod(path, 0o755);
+  } catch {
+    /* best effort */
+  }
+}
+
 function createLocalSettings(
   mediaWikiRoot: string,
   sqliteDir: string,
   cacheDir: string,
   tmpDir: string,
-  scribuntoEnabled: boolean
+  scribuntoEnabled: boolean,
+  luaStubPath: string
 ): string {
   const allowedUserFunctionNamespaces = [
     -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 32, 33, 102, 103, 104, 105, 106, 107,
@@ -553,7 +670,11 @@ $wgNamespaceAliases['Category‐ノート'] = NS_CATEGORY_TALK;
 
 $wgUFEnabledPersonalDataFunctions = [ 'realname', 'username', 'useremail', 'nickname', 'ip' ];
 $wgUFAllowedNamespaces = ${phpArrayFromNumberKeys(allowedUserFunctionNamespaces)};
-${scribuntoEnabled ? "$wgScribuntoDefaultEngine = 'luastandalone';" : "# Scribunto disabled in this preview installation"}
+${scribuntoEnabled
+  ? `$wgScribuntoDefaultEngine = 'luastandalone';\n$wgScribuntoEngineConf['luastandalone']['luaPath'] = ${phpString(
+      luaStubPath
+    )};`
+  : "# Scribunto disabled in this preview installation"}
 $wgWBClientSettings['siteGlobalID'] = 'uncyc_ja';
 $wgWBClientSettings['repoUrl'] = 'https://www.wikidata.org';
 $wgWBClientSettings['repoArticlePath'] = '/wiki/$1';

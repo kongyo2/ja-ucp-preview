@@ -59,6 +59,33 @@ describe("ja ucp renderer", () => {
     expect(result.html).toContain(".mw-parser-output .ja-ucp-smoke{color:#0645ad}");
   }, 600_000);
 
+  it.skip("dispatches Scribunto #invoke through the bundled wasmoon-lua5.1 server (WIP)", async () => {
+    // The wasmoon-lua5.1-backed Scribunto server lives in
+    // src/backend/scribuntoServer.ts and is wired through the spawn handler
+    // when `scribuntoEnabled: true`. However, the in-WASM PHP <-> in-Node Lua
+    // round-trip currently deadlocks during PHP's first fread on the Lua
+    // process's stdout (PHP/WASM does not appear to yield to the Node event
+    // loop in this code path). Skipping the test until that is resolved.
+    const scribuntoBackend = createPhpWasmBackend({
+      workDir: ".ja-ucp-preview-work/vitest-scribunto",
+      scribuntoEnabled: true
+    });
+    const renderer = createJaUcpRenderer({ backend: scribuntoBackend });
+
+    const result = await renderer.render({
+      title: "Claude",
+      wikitext: "{{#invoke:Example|hello}}",
+      pageOverrides: {
+        "Module:Example": {
+          contentModel: "Scribunto",
+          text: "local p = {}; function p.hello(frame) return 'Lua_OK' end; return p"
+        }
+      }
+    });
+
+    expect(result.html).toContain("Lua_OK");
+  }, 600_000);
+
   it("includes captured ja-ucp site styles by default without network access", async () => {
     const renderer = createJaUcpRenderer({ backend });
 
