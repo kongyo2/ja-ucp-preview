@@ -60,12 +60,13 @@ describe("ja ucp renderer", () => {
   }, 600_000);
 
   it.skip("dispatches Scribunto #invoke through the bundled wasmoon-lua5.1 server (WIP)", async () => {
-    // The wasmoon-lua5.1-backed Scribunto server lives in
-    // src/backend/scribuntoServer.ts and is wired through the spawn handler
-    // when `scribuntoEnabled: true`. However, the in-WASM PHP <-> in-Node Lua
-    // round-trip currently deadlocks during PHP's first fread on the Lua
-    // process's stdout (PHP/WASM does not appear to yield to the Node event
-    // loop in this code path). Skipping the test until that is resolved.
+    // The wasmoon-lua5.1-backed Scribunto server in
+    // src/backend/scribuntoServer.ts exchanges the first ~10 LuaStandalone
+    // protocol messages successfully (registerLibrary, loadString, fake-mw
+    // package, executeModule dispatch). The remaining work to make this
+    // green is bridging Scribunto's `mw_interface` re-entry callbacks, which
+    // need Promise-await semantics that wasmoon-lua5.1 1.x does not expose;
+    // see README "Scribunto / Lua" for details.
     const scribuntoBackend = createPhpWasmBackend({
       workDir: ".ja-ucp-preview-work/vitest-scribunto",
       scribuntoEnabled: true
