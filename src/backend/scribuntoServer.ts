@@ -1084,7 +1084,7 @@ export async function runScribuntoServer(
     }
   });
 
-  async function readBytes(n: number, allowIdleTimeout = false): Promise<Buffer | null> {
+  async function readBytes(n: number, idleTimeoutMs: number): Promise<Buffer | null> {
     if (n === 0) return Buffer.alloc(0);
     for (;;) {
       const total = stdinBuffer.reduce((a, b) => a + b.length, 0);
@@ -1094,39 +1094,36 @@ export async function runScribuntoServer(
         if (all.length > n) stdinBuffer.push(all.subarray(n));
         return all.subarray(0, n);
       }
-      // The "main loop" idle wait can give up after a few seconds with no
-      // input – that's the signal that PHP has finished with our lua process
-      // and the spawn handler should let the runtime tear down cleanly.
       const got = await new Promise<boolean>((resolve) => {
         stdinResolver = () => resolve(true);
-        if (allowIdleTimeout) {
-          setTimeout(() => resolve(false), 3000);
+        if (idleTimeoutMs > 0) {
+          setTimeout(() => resolve(false), idleTimeoutMs);
         }
       });
-      if (!got && allowIdleTimeout) {
+      if (!got && idleTimeoutMs > 0) {
         return null;
       }
     }
   }
 
-  // `allowIdleTimeout` is true ONLY for the outer "is PHP still talking to
-  // us?" wait at the top of the main dispatch loop. Inside dispatchToPhp –
-  // i.e. while we're actively waiting on PHP to answer a request we made –
-  // the read must NEVER time out, otherwise a slow PHP-side callback (a
-  // template expansion that takes more than 3s, a parser function with
-  // expensive work, etc.) would be misinterpreted as EOF and fail with
-  // "stdin closed before reply arrived". Default to in-flight semantics.
-  async function readMessage(allowIdleTimeout = false): Promise<ScribuntoMessage | null> {
-    const header = await readBytes(16, allowIdleTimeout);
+  // The outer dispatch loop passes idleTimeout=true so we can give up
+  // cleanly when PHP stops sending messages (otherwise PHP's proc_close
+  // for the spawned lua process would block forever). Nested reads
+  // inside `dispatchToPhp` pass a longer in-flight timeout: short enough
+  // to fail fast on a genuinely stuck PHP, but long enough that slow but
+  // legitimate PHP-side callbacks (template expansion, parser functions,
+  // …) aren't misread as EOF.
+  async function readMessage(idleTimeoutMs: number): Promise<ScribuntoMessage | null> {
+    const header = await readBytes(16, idleTimeoutMs);
     if (!header) return null;
     const lenHex = header.toString("utf8", 0, 8);
     const length = parseInt(lenHex, 16);
     if (!Number.isFinite(length) || length < 0) {
       throw new Error(`Invalid Scribunto header length: ${lenHex}`);
     }
-    // Body read always blocks – at this point we know the protocol message
-    // is mid-flight, so EOF here would be a genuine protocol error.
-    const body = await readBytes(length, false);
+    // Body read uses the same in-flight timeout as the header so we don't
+    // get stuck on a partial message either.
+    const body = await readBytes(length, idleTimeoutMs);
     if (!body) {
       throw new Error("Scribunto stdin closed mid-message");
     }
@@ -1679,7 +1676,10 @@ return result`;
     debugLog(`dispatch -> PHP op=${outgoing.op} id=${JSON.stringify(outgoing.id)}`);
     api.stdout(enc);
     for (;;) {
-      const incoming = await readMessage();
+      // 60s in-flight timeout: generous enough for slow PHP-side
+      // callbacks (expandTemplate, preprocess), tight enough to surface
+      // a genuinely stuck PHP rather than hanging forever.
+      const incoming = await readMessage(60_000);
       if (!incoming) {
         throw new Error("dispatchToPhp: stdin closed before reply arrived");
       }
@@ -1905,7 +1905,9 @@ return ''
     let msg: ScribuntoMessage | null;
     try {
       debugLog("waiting for message");
-      msg = await readMessage(true);
+      // Outer dispatch loop: 3s idle timeout so we exit cleanly when PHP
+      // is done driving the Scribunto interpreter.
+      msg = await readMessage(3_000);
       if (!msg) {
         // Idle timeout fired – PHP hasn't sent any more messages, so the
         // parent renderer is probably done with this Scribunto instance.

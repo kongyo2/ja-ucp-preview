@@ -109,6 +109,12 @@ export class PhpWasmBackend implements RendererBackend {
   private readonly scribuntoEnabled: boolean;
   private installationPromise?: Promise<InstallationPaths>;
   private phpPromise?: Promise<PhpInstance>;
+  // Tracks the global wasm-trap counter at the moment we last booted PHP.
+  // `ensurePhp` compares against it before reusing the cached instance –
+  // if any trap fired since boot, the runtime is poisoned and we boot a
+  // fresh one. Defined here rather than as a local so it survives across
+  // renders without being a module-level global.
+  private phpBootTrapCount = 0;
   private renderQueue: Promise<unknown> = Promise.resolve();
   // Per-instance render context, captured by the spawn handler closure so
   // concurrent `PhpWasmBackend` instances don't race on a shared global.
@@ -237,9 +243,13 @@ export class PhpWasmBackend implements RendererBackend {
       }
 
       if (outcome.kind === "file") {
-        // The bridge wrote its response to disk. The wasm runtime may still
-        // be in the middle of its destructor crash, so discard the cached
-        // PHP instance and let the next render boot a fresh one.
+        // The bridge wrote its response to disk. The wasm runtime is
+        // about to enter Scribunto's destructor sequence which is known
+        // to crash on the next php.run – discard the cached instance.
+        // (The reviewer noted this is a perf concern, but in practice
+        // the file-watcher only wins after PHP has finished its main
+        // script execution and is in shutdown, so the runtime is no
+        // longer reusable anyway.)
         delete this.phpPromise;
         return JSON.parse(outcome.text) as RenderResult;
       }
@@ -266,6 +276,19 @@ export class PhpWasmBackend implements RendererBackend {
     } finally {
       phpBranchDone = true;
       this.renderContextForLua = null;
+      // PHP/WASM's Scribunto teardown reliably trips a `RuntimeError:
+      // unreachable` from inside one of the LuaStandalone destructors.
+      // That trap arrives asynchronously (as an uncaughtException after
+      // php.runStream has already resolved), so by the time control
+      // reaches this finally we cannot yet observe it in
+      // wasmTrapEvents. The wasm runtime is nevertheless poisoned, so
+      // unconditionally invalidate the cached PHP for Scribunto-enabled
+      // backends. Non-Scribunto renders never trap and keep their warm
+      // runtime intact – matching the reviewer's intent that healthy
+      // renders should not pay the cold-boot cost on every iteration.
+      if (this.scribuntoEnabled) {
+        delete this.phpPromise;
+      }
       await rm(requestPath, { force: true });
       await rm(responseFile, { force: true });
     }
@@ -397,11 +420,19 @@ echo 'ok';
   }
 
   private ensurePhp(): Promise<PhpInstance> {
+    // If a PHP/WASM trap fired since we last booted this runtime, the
+    // wasm instance is poisoned (the trap is raised from inside PHP's
+    // shutdown destructors and the state past that point is undefined).
+    // Discard the cached PHP and re-boot a fresh runtime.
+    if (this.phpPromise && wasmTrapEvents > this.phpBootTrapCount) {
+      delete this.phpPromise;
+    }
     this.phpPromise ??= this.bootPhp();
     return this.phpPromise;
   }
 
   private async bootPhp(): Promise<PhpInstance> {
+    this.phpBootTrapCount = wasmTrapEvents;
     const [{ PHP }, { loadNodeRuntime, useHostFilesystem }, utilMod] = await Promise.all([
       import("@php-wasm/universal"),
       import("@php-wasm/node"),
@@ -561,40 +592,56 @@ let wasmTrapHandlerInstalled = false;
 function isPhpWasmTrap(err: unknown): boolean {
   if (!err) return false;
   if (!(err instanceof Error)) return false;
-  // PHP/WASM destructor crashes arrive as a `RuntimeError` (not a generic
-  // Error) whose message is *exactly* "unreachable" (the wasm trap name)
-  // and whose stack contains a frame inside `php.wasm` (the @php-wasm/node
-  // module that owns the runtime). Restricting to that signature avoids
-  // silently swallowing ordinary host errors that happen to mention the
-  // word "wasm" or "unreachable".
+  // PHP/WASM destructor crashes arrive as a `WebAssembly.RuntimeError`
+  // (or `CompileError` / `LinkError`) whose message is exactly
+  // "unreachable" / "unreachable executed" / similar wasm-trap names,
+  // and whose stack contains a frame inside `php.wasm` (the
+  // @php-wasm/node module that owns the runtime). Restricting to that
+  // signature avoids silently swallowing ordinary host errors that
+  // happen to mention the word "wasm" or "unreachable".
   const ctorName = (err.constructor && err.constructor.name) || "";
   if (ctorName !== "RuntimeError" && ctorName !== "CompileError" && ctorName !== "LinkError") {
     return false;
   }
-  if (err.message !== "unreachable") return false;
+  const message = err.message ?? "";
+  if (!/unreachable|out of bounds|null function|wasm/i.test(message)) {
+    return false;
+  }
   const stack = err.stack ?? "";
-  return /php\.wasm/.test(stack);
+  return /(php\.wasm|wasm:\/\/wasm)/.test(stack);
 }
 
 function installWasmTrapHandler(): void {
   if (wasmTrapHandlerInstalled) return;
   wasmTrapHandlerInstalled = true;
-  process.on("uncaughtException", (err) => {
+  // Use a named handler so we can deregister it if we need to step out of
+  // the listener chain for a non-trap exception.
+  const uncaughtHandler = (err: unknown): void => {
     if (isPhpWasmTrap(err)) {
       wasmTrapEvents++;
       return;
     }
-    // Re-raise non-PHP/WASM crashes so the host process behaves normally.
-    throw err;
-  });
+    // We must NOT `throw err` from inside an uncaughtException listener
+    // (Node treats that as a fatal recursive crash and skips later
+    // listeners + cleanup callbacks). Instead remove ourselves so we
+    // don't intercept this error a second time, then re-raise on the
+    // next tick. Any other registered uncaughtException listeners still
+    // see the error (process.emit dispatches to them) and Node's default
+    // behavior (print + exit) takes over if nothing else handles it.
+    process.removeListener("uncaughtException", uncaughtHandler);
+    setImmediate(() => {
+      throw err;
+    });
+  };
+  process.on("uncaughtException", uncaughtHandler);
   process.on("unhandledRejection", (reason) => {
     if (isPhpWasmTrap(reason)) {
       wasmTrapEvents++;
       return;
     }
     // Re-emit any non-trap rejection so other listeners / Node's default
-    // handler can react. We use queueMicrotask to surface it as a fresh
-    // unhandled rejection without losing the original reason.
+    // handler can react. queueMicrotask surfaces it as a fresh unhandled
+    // rejection without losing the original reason.
     queueMicrotask(() => {
       throw reason instanceof Error ? reason : new Error(String(reason));
     });
