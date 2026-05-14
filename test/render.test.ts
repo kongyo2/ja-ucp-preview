@@ -554,6 +554,12 @@ describe("ja ucp renderer", () => {
     expect(jaUncyclopediaSnapshot.functionHooks).toContain("property");
     expect(jaUncyclopediaSnapshot.variables).toContain("stylepath");
     expect(jaUncyclopediaSnapshot.variables).toContain("directionmark");
+    expect(jaUncyclopediaSnapshot.magicWords.length).toBe(303);
+    expect(jaUncyclopediaSnapshot.magicWords).toContain("expr");
+    expect(jaUncyclopediaSnapshot.magicWords).toContain("invoke");
+    expect(jaUncyclopediaSnapshot.magicWords).toContain("css");
+    expect(jaUncyclopediaSnapshot.magicWords).toContain("stylepath");
+    expect(jaUncyclopediaSnapshot.magicWords).toContain("pagename");
   });
 
   it("identifies the bundled PHP/WASM backend", () => {
