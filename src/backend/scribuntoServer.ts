@@ -967,10 +967,11 @@ export interface RenderContextForLua {
   lang: string;
 }
 
-let currentRenderContext: RenderContextForLua | null = null;
-export function setCurrentRenderContext(ctx: RenderContextForLua | null): void {
-  currentRenderContext = ctx;
-}
+// NOTE: do **not** make this a module-level mutable singleton – two
+// concurrently-running `PhpWasmBackend` instances would race on it. The
+// render context is instead threaded through `runScribuntoServer`'s
+// `currentRenderContext` argument, captured in the spawn-handler closure
+// per `PhpWasmBackend` boot.
 
 interface ScribuntoMessage {
   op: string;
@@ -1000,7 +1001,8 @@ interface ChunkEntry {
 export async function runScribuntoServer(
   argv: string[],
   api: SpawnApi,
-  options: { cwd?: string; env?: Record<string, string> }
+  options: { cwd?: string; env?: Record<string, string> },
+  currentRenderContext: RenderContextForLua | null
 ): Promise<void> {
   void options;
   debugLog(`enter runScribuntoServer argv=${JSON.stringify(argv)}`);
@@ -1107,16 +1109,27 @@ export async function runScribuntoServer(
     }
   }
 
-  async function readMessage(): Promise<ScribuntoMessage | null> {
-    const header = await readBytes(16, true);
+  // `allowIdleTimeout` is true ONLY for the outer "is PHP still talking to
+  // us?" wait at the top of the main dispatch loop. Inside dispatchToPhp –
+  // i.e. while we're actively waiting on PHP to answer a request we made –
+  // the read must NEVER time out, otherwise a slow PHP-side callback (a
+  // template expansion that takes more than 3s, a parser function with
+  // expensive work, etc.) would be misinterpreted as EOF and fail with
+  // "stdin closed before reply arrived". Default to in-flight semantics.
+  async function readMessage(allowIdleTimeout = false): Promise<ScribuntoMessage | null> {
+    const header = await readBytes(16, allowIdleTimeout);
     if (!header) return null;
     const lenHex = header.toString("utf8", 0, 8);
     const length = parseInt(lenHex, 16);
     if (!Number.isFinite(length) || length < 0) {
       throw new Error(`Invalid Scribunto header length: ${lenHex}`);
     }
-    const body = await readBytes(length);
-    if (!body) return null;
+    // Body read always blocks – at this point we know the protocol message
+    // is mid-flight, so EOF here would be a genuine protocol error.
+    const body = await readBytes(length, false);
+    if (!body) {
+      throw new Error("Scribunto stdin closed mid-message");
+    }
     const bodyStr = body.toString("utf8");
     debugLog(`raw body (${length} bytes): ${bodyStr.slice(0, 200)}`);
     // The body is a Lua expression. We *could* parse it via `lua.doString`,
@@ -1892,7 +1905,7 @@ return ''
     let msg: ScribuntoMessage | null;
     try {
       debugLog("waiting for message");
-      msg = await readMessage();
+      msg = await readMessage(true);
       if (!msg) {
         // Idle timeout fired – PHP hasn't sent any more messages, so the
         // parent renderer is probably done with this Scribunto instance.

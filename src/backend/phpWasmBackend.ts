@@ -9,7 +9,7 @@ import {
   jaUncyclopediaSkinStyleTitles,
   siteStylePageOverrides
 } from "../site/styles.js";
-import { runScribuntoServer, setCurrentRenderContext, type SpawnApi } from "./scribuntoServer.js";
+import { runScribuntoServer, type RenderContextForLua, type SpawnApi } from "./scribuntoServer.js";
 import { parseTitle } from "../site/title.js";
 
 export interface PhpWasmBackendOptions {
@@ -110,6 +110,9 @@ export class PhpWasmBackend implements RendererBackend {
   private installationPromise?: Promise<InstallationPaths>;
   private phpPromise?: Promise<PhpInstance>;
   private renderQueue: Promise<unknown> = Promise.resolve();
+  // Per-instance render context, captured by the spawn handler closure so
+  // concurrent `PhpWasmBackend` instances don't race on a shared global.
+  private renderContextForLua: RenderContextForLua | null = null;
 
   private readonly luaStubPath: string;
 
@@ -164,10 +167,11 @@ export class PhpWasmBackend implements RendererBackend {
     const wasmTrappedAtStart = wasmTrapEvents;
 
     // Pass the rendered title into the Lua-side mw stub so mw.title.* gives
-    // sensible answers without needing PHP callbacks.
+    // sensible answers without needing PHP callbacks. Stored on this
+    // instance so it can't be overwritten by a concurrent backend.
     try {
       const parsed = parseTitle(request.title, context.site);
-      setCurrentRenderContext({
+      this.renderContextForLua = {
         title: parsed.prefixedText,
         ns: parsed.namespaceId,
         nsName: parsed.namespace.name,
@@ -175,12 +179,18 @@ export class PhpWasmBackend implements RendererBackend {
         wgServer: context.site.server,
         wgArticlePath: context.site.articlePath,
         lang: context.site.lang
-      });
+      };
     } catch {
-      setCurrentRenderContext(null);
+      this.renderContextForLua = null;
     }
 
     const captureBuffer = { stdout: "", stderr: "" };
+    // `cancelWatcher` lets us tear down the response-file polling loop as
+    // soon as the PHP branch resolves (success OR failure), so a render
+    // that fails before the bridge ever writes the response file doesn't
+    // leave a polling promise + setTimeout running for the lifetime of
+    // the process.
+    let phpBranchDone = false;
     try {
       const runPromise = runPhpScript(
         php,
@@ -193,15 +203,25 @@ export class PhpWasmBackend implements RendererBackend {
         },
         captureBuffer
       ).then(
-        (r) => ({ kind: "ok" as const, response: r }),
-        (err) => ({ kind: "error" as const, error: err })
+        (r) => {
+          phpBranchDone = true;
+          return { kind: "ok" as const, response: r };
+        },
+        (err) => {
+          phpBranchDone = true;
+          return { kind: "error" as const, error: err };
+        }
       );
 
       // Race the PHP run against polling the response file. The bridge writes
       // the rendered JSON to `<requestPath>.response` BEFORE PHP's shutdown
       // destructor sequence runs, so the file is present even if the wasm
       // runtime later traps and runPhpScript never resolves.
-      const fileWatcher = waitForResponseFile(responseFile, () => wasmTrapEvents > wasmTrappedAtStart);
+      const fileWatcher = waitForResponseFile(
+        responseFile,
+        () => wasmTrapEvents > wasmTrappedAtStart,
+        () => phpBranchDone
+      );
 
       const outcome = await Promise.race([runPromise, fileWatcher]);
 
@@ -224,9 +244,28 @@ export class PhpWasmBackend implements RendererBackend {
         return JSON.parse(outcome.text) as RenderResult;
       }
 
+      if (outcome.kind === "cancelled") {
+        // Watcher gave up because the PHP branch finished without writing
+        // a response file. Await `runPromise` (which is already settled at
+        // this point) to surface the real error/result.
+        const real = await runPromise;
+        if (real.kind === "ok") {
+          const text = real.response.text.trim();
+          try {
+            return JSON.parse(text) as RenderResult;
+          } catch {
+            throw new ExactMediaWikiRuntimeError(
+              `MediaWiki render bridge did not return JSON.\nSTDOUT:\n${real.response.text}\nSTDERR:\n${real.response.errors}`
+            );
+          }
+        }
+        throw real.error;
+      }
+
       throw outcome.error;
     } finally {
-      setCurrentRenderContext(null);
+      phpBranchDone = true;
+      this.renderContextForLua = null;
       await rm(requestPath, { force: true });
       await rm(responseFile, { force: true });
     }
@@ -381,12 +420,22 @@ echo 'ok';
       .createSpawnHandler;
     if (typeof (php as unknown as { setSpawnHandler?: unknown }).setSpawnHandler === "function" && typeof createSpawnHandler === "function") {
       const scribuntoEnabled = this.scribuntoEnabled;
+      // Capture `this` (the PhpWasmBackend instance) so the spawn handler
+      // can read the current render's context from a per-instance field,
+      // rather than a module-level mutable singleton that would race
+      // between concurrent backend instances.
+      const self = this;
       await (php as unknown as { setSpawnHandler: (h: unknown) => Promise<void> }).setSpawnHandler(
         createSpawnHandler(async (argvIn, api, options) => {
           const argv = unwrapShellArgv(argvIn);
           logSpawnEvent(`spawn enabled=${scribuntoEnabled} isLua=${isLuaCommand(argv)} argvIn=${JSON.stringify(argvIn)} argv=${JSON.stringify(argv)}`);
           if (scribuntoEnabled && isLuaCommand(argv)) {
-            await runScribuntoServer(argv, api as unknown as SpawnApi, options);
+            await runScribuntoServer(
+              argv,
+              api as unknown as SpawnApi,
+              options,
+              self.renderContextForLua
+            );
             return;
           }
           api.notifySpawn();
@@ -508,37 +557,65 @@ export function createPhpWasmBackend(options: PhpWasmBackendOptions = {}): PhpWa
 // with other concurrent renders or tests.
 let wasmTrapEvents = 0;
 let wasmTrapHandlerInstalled = false;
+
+function isPhpWasmTrap(err: unknown): boolean {
+  if (!err) return false;
+  if (!(err instanceof Error)) return false;
+  // PHP/WASM destructor crashes arrive as a `RuntimeError` (not a generic
+  // Error) whose message is *exactly* "unreachable" (the wasm trap name)
+  // and whose stack contains a frame inside `php.wasm` (the @php-wasm/node
+  // module that owns the runtime). Restricting to that signature avoids
+  // silently swallowing ordinary host errors that happen to mention the
+  // word "wasm" or "unreachable".
+  const ctorName = (err.constructor && err.constructor.name) || "";
+  if (ctorName !== "RuntimeError" && ctorName !== "CompileError" && ctorName !== "LinkError") {
+    return false;
+  }
+  if (err.message !== "unreachable") return false;
+  const stack = err.stack ?? "";
+  return /php\.wasm/.test(stack);
+}
+
 function installWasmTrapHandler(): void {
   if (wasmTrapHandlerInstalled) return;
   wasmTrapHandlerInstalled = true;
-  const isWasmTrap = (err: unknown): boolean => {
-    if (!err) return false;
-    const message = err instanceof Error ? err.message : String(err);
-    return message.includes("unreachable") || message.includes("wasm");
-  };
   process.on("uncaughtException", (err) => {
-    if (isWasmTrap(err)) {
+    if (isPhpWasmTrap(err)) {
       wasmTrapEvents++;
       return;
     }
+    // Re-raise non-PHP/WASM crashes so the host process behaves normally.
     throw err;
   });
-  process.on("unhandledRejection", (err) => {
-    if (isWasmTrap(err)) {
+  process.on("unhandledRejection", (reason) => {
+    if (isPhpWasmTrap(reason)) {
       wasmTrapEvents++;
+      return;
     }
+    // Re-emit any non-trap rejection so other listeners / Node's default
+    // handler can react. We use queueMicrotask to surface it as a fresh
+    // unhandled rejection without losing the original reason.
+    queueMicrotask(() => {
+      throw reason instanceof Error ? reason : new Error(String(reason));
+    });
   });
 }
 
 async function waitForResponseFile(
   path: string,
-  trapped: () => boolean
-): Promise<{ kind: "file"; text: string }> {
+  trapped: () => boolean,
+  cancelled: () => boolean
+): Promise<{ kind: "file"; text: string } | { kind: "cancelled" }> {
   const { readFile: readFileAsync, stat } = await import("node:fs/promises");
   // Poll the response file. The bridge writes it atomically so the JSON is
   // complete by the time stat() sees it. After the wasm trap is observed we
-  // also force-check once more to handle very short windows.
+  // also force-check once more to handle very short windows. The `cancelled`
+  // callback lets the caller tell us the PHP branch has already resolved
+  // (success OR failure) so we stop polling and let Node become idle.
   for (;;) {
+    if (cancelled()) {
+      return { kind: "cancelled" };
+    }
     try {
       const stats = await stat(path);
       if (stats.size > 0) {
