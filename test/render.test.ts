@@ -331,6 +331,63 @@ describe("ja ucp renderer", () => {
     expect(result.html).toContain("[hello | World]");
   }, 600_000);
 
+  it("renders Scribunto modules that expand templates via frame:expandTemplate", async () => {
+    const scribuntoBackend = createPhpWasmBackend({
+      workDir: ".ja-ucp-preview-work/vitest-scribunto-expand",
+      scribuntoEnabled: true
+    });
+    const renderer = createJaUcpRenderer({ backend: scribuntoBackend });
+
+    const result = await renderer.render({
+      title: "Claude",
+      wikitext: "{{#invoke:Wrapper|render}}",
+      templateOverrides: {
+        Inner: "INNER:{{{1|}}}|{{{name|}}}"
+      },
+      pageOverrides: {
+        "Module:Wrapper": {
+          contentModel: "Scribunto",
+          text: [
+            "local p = {}",
+            "function p.render(frame)",
+            "  return frame:expandTemplate{ title = 'Inner', args = { 'positional', name = 'kw' } }",
+            "end",
+            "return p"
+          ].join("\n")
+        }
+      }
+    });
+
+    expect(result.html).toContain("INNER:positional|kw");
+  }, 600_000);
+
+  it("renders Scribunto modules that use frame:preprocess", async () => {
+    const scribuntoBackend = createPhpWasmBackend({
+      workDir: ".ja-ucp-preview-work/vitest-scribunto-preprocess",
+      scribuntoEnabled: true
+    });
+    const renderer = createJaUcpRenderer({ backend: scribuntoBackend });
+
+    const result = await renderer.render({
+      title: "Claude",
+      wikitext: "{{#invoke:Pp|render}}",
+      pageOverrides: {
+        "Module:Pp": {
+          contentModel: "Scribunto",
+          text: [
+            "local p = {}",
+            "function p.render(frame)",
+            "  return frame:preprocess('{{#expr: 6 * 7}}')",
+            "end",
+            "return p"
+          ].join("\n")
+        }
+      }
+    });
+
+    expect(result.html).toContain("42");
+  }, 600_000);
+
   it("renders Scribunto modules that use mw.message", async () => {
     const scribuntoBackend = createPhpWasmBackend({
       workDir: ".ja-ucp-preview-work/vitest-scribunto-message",

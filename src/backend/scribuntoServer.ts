@@ -1314,7 +1314,6 @@ return true`;
           // and get back the #invoke parameters that the user wrote (e.g.
           // `{{#invoke:Mod|fn|hello|name=World}}` => {1: 'hello', name: 'World'}).
           let frameArgsLua = "{}";
-          const parentFrameArgsLua = "{}";
           try {
             const fetched = await fetchExpandedArgs("current");
             frameArgsLua = serializeArgsToLua(fetched);
@@ -1324,9 +1323,15 @@ return true`;
           }
 
           const globalSlot = `__ja_ucp_module_${parent}`;
-          const luaInvoke = `
+
+          // Set up the coroutine that runs the user function. The frame
+          // surface uses `coroutine.yield` to ask JS for help with the
+          // dynamic PHP-backed operations (expandTemplate, preprocess,
+          // getExpandedArgument-for-arbitrary-frame, …). The yield value is
+          // a Lua table {op = "...", ...}; the JS side does the PHP
+          // round-trip and resumes the coroutine with the result.
+          await lua.doString(`
 local __args = ${frameArgsLua}
-local __parent_args = ${parentFrameArgsLua}
 local __frame
 __frame = {
 	args = setmetatable(__args, { __index = function(t, k)
@@ -1338,15 +1343,140 @@ __frame = {
 	getAllArguments = function() return __frame.args end,
 	getParent = function() return nil end,
 	newChild = function() return __frame end,
-	expandTemplate = function() return '' end,
-	callParserFunction = function() return '' end,
-	preprocess = function(_, s) return tostring(s or '') end
+	expandTemplate = function(_, params)
+		return coroutine.yield({ op = 'expandTemplate', title = (params or {}).title, args = (params or {}).args })
+	end,
+	callParserFunction = function(_, params)
+		if type(params) == 'string' then params = { name = params } end
+		return coroutine.yield({ op = 'callParserFunction', name = (params or {}).name, args = (params or {}).args })
+	end,
+	preprocess = function(_, s)
+		return coroutine.yield({ op = 'preprocess', text = tostring(s or '') })
+	end
 }
 mw.getCurrentFrame = function() return __frame end
-return ${globalSlot}[${JSON.stringify(name)}](__frame)`;
-          const result = (await lua.doString(luaInvoke)) as unknown;
+__ja_ucp_user_co = coroutine.create(function()
+	return ${globalSlot}[${JSON.stringify(name)}](__frame)
+end)
+__ja_ucp_resume_value = nil
+`);
+
+          // Step the coroutine, dispatching any yields out to PHP. The loop
+          // terminates when the coroutine reaches "dead" status. We
+          // serialize the step result through a pure-Lua JSON encoder so
+          // that the wasmoon JS proxy doesn't have to traverse Lua tables
+          // (which can throw "target[key].bind is not a function" for nested
+          // table values).
+          let userResult: unknown = null;
+          for (;;) {
+            const stepJson = (await lua.doString(`
+local ok, ret = coroutine.resume(__ja_ucp_user_co, __ja_ucp_resume_value)
+__ja_ucp_resume_value = nil
+local status = coroutine.status(__ja_ucp_user_co)
+
+local function encode(v)
+	local t = type(v)
+	if v == nil then return 'null' end
+	if t == 'boolean' then return v and 'true' or 'false' end
+	if t == 'number' then
+		if v ~= v then return 'null' end
+		if v == math.huge or v == -math.huge then return 'null' end
+		return tostring(v)
+	end
+	if t == 'string' then
+		return '"' .. v:gsub('\\\\', '\\\\\\\\'):gsub('"', '\\\\"'):gsub('\\n', '\\\\n'):gsub('\\r', '\\\\r'):gsub('\\t', '\\\\t') .. '"'
+	end
+	if t == 'table' then
+		-- Detect sequence
+		local n = 0
+		for _ in pairs(v) do n = n + 1 end
+		local seq_len = #v
+		if n == seq_len and seq_len > 0 then
+			local parts = {}
+			for i = 1, seq_len do parts[i] = encode(v[i]) end
+			return '[' .. table.concat(parts, ',') .. ']'
+		end
+		local parts = {}
+		for k, val in pairs(v) do
+			parts[#parts + 1] = encode(tostring(k)) .. ':' .. encode(val)
+		end
+		return '{' .. table.concat(parts, ',') .. '}'
+	end
+	return 'null'
+end
+
+if not ok then
+	return encode({ kind = 'error', message = tostring(ret) })
+end
+if status == 'dead' then
+	return encode({ kind = 'done', value = ret })
+end
+if type(ret) == 'table' then
+	if ret.op == 'preprocess' then
+		return encode({ kind = 'preprocess', text = tostring(ret.text or '') })
+	elseif ret.op == 'expandTemplate' then
+		local args_s = {}
+		if type(ret.args) == 'table' then
+			for k, val in pairs(ret.args) do args_s[tostring(k)] = tostring(val) end
+		end
+		return encode({ kind = 'expandTemplate', title = tostring(ret.title or ''), args = args_s })
+	elseif ret.op == 'callParserFunction' then
+		local args_s = {}
+		if type(ret.args) == 'table' then
+			local seq_len = #ret.args
+			if seq_len > 0 then
+				for i = 1, seq_len do args_s[i] = tostring(ret.args[i]) end
+			else
+				for k, val in pairs(ret.args) do args_s[tostring(k)] = tostring(val) end
+			end
+		end
+		return encode({ kind = 'callParserFunction', name = tostring(ret.name or ''), args = args_s })
+	end
+end
+return encode({ kind = 'unknown', value = tostring(ret) })
+`)) as string;
+
+            const step = JSON.parse(stepJson) as {
+              kind: string;
+              value?: unknown;
+              message?: string;
+              text?: string;
+              title?: string;
+              args?: Record<string, string> | string[];
+              name?: string;
+            };
+            if (step.kind === "done") {
+              userResult = step.value;
+              break;
+            }
+            if (step.kind === "error") {
+              return { op: "error", value: String(step.message ?? "module error") };
+            }
+            if (step.kind === "preprocess") {
+              const text = String(step.text ?? "");
+              const out = await dispatchScalar("preprocess", "current", text);
+              await lua.doString(`__ja_ucp_resume_value = ${JSON.stringify(String(out ?? ""))}`);
+              continue;
+            }
+            if (step.kind === "expandTemplate") {
+              const title = String(step.title ?? "");
+              const tplArgs = (step.args ?? {}) as Record<string, string>;
+              const out = await dispatchScalar("expandTemplate", "current", title, tplArgs);
+              await lua.doString(`__ja_ucp_resume_value = ${JSON.stringify(String(out ?? ""))}`);
+              continue;
+            }
+            if (step.kind === "callParserFunction") {
+              const fnName = String(step.name ?? "");
+              const cpArgs = (step.args ?? {}) as Record<string, string> | string[];
+              const out = await dispatchScalar("callParserFunction", "current", fnName, cpArgs);
+              await lua.doString(`__ja_ucp_resume_value = ${JSON.stringify(String(out ?? ""))}`);
+              continue;
+            }
+            await lua.doString("__ja_ucp_resume_value = nil");
+          }
+
           const values: Record<number, unknown> = {};
-          const arr = normalizeLuaReturn(result);
+          const arr = normalizeLuaReturn(userResult);
           arr.forEach((v, i) => {
             values[i + 1] = stringifyLuaValue(v);
           });
@@ -1541,6 +1671,28 @@ return result`;
       out[k] = String(v);
     }
     return out;
+  }
+
+  // Run a single round-trip into PHP from inside the executeFunction handler.
+  // Used by the wasmoon-side `frame:expandTemplate` / `frame:preprocess`
+  // helpers that we expose via the `__ja_ucp_yield` cooperative scheduling
+  // trick below.
+  async function dispatchScalar(funcName: string, ...callArgs: unknown[]): Promise<unknown> {
+    const fnId = registeredFuncs.get(funcName);
+    if (!fnId) return "";
+    const argMap: Record<string, unknown> = {};
+    callArgs.forEach((v, i) => {
+      argMap[String(i + 1)] = v;
+    });
+    const reply = await dispatchToPhp({
+      op: "call",
+      id: fnId,
+      nargs: callArgs.length,
+      args: argMap
+    });
+    if (reply.op !== "return") return "";
+    const values = (reply.values as Record<string, unknown>) ?? {};
+    return values["1"] ?? "";
   }
 
   function serializeArgsToLua(args: Record<string, string>): string {
