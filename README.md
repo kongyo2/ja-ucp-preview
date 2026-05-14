@@ -77,22 +77,44 @@ const { html } = await renderer.render({
 // html contains "Lua_OK"
 ```
 
-The Scribunto server pre-installs a Lua-native `mw` stub into the wasmoon
-environment with the commonly-used Scribunto helpers:
+The Scribunto server pre-installs a Lua-native `mw` library covering the
+helpers ja-ucp Scribunto modules use:
 
-* `mw.text.trim` / `mw.text.split` / `mw.text.gsplit`
-* `mw.text.listToText` / `mw.text.encode` / `mw.text.decode`
-* `mw.text.tag` / `mw.text.truncate` / `mw.text.nowiki`
-* `mw.ustring.*` (len, sub, find, gsub, upper, lower, format, …)
+* `mw.text.*`: `trim`, `split`, `gsplit`, `listToText`, `encode`, `decode`,
+  `tag`, `truncate`, `nowiki`.
+* `mw.ustring.*`: `len`, `sub`, `byte`, `byteoffset`, `find`, `match`,
+  `gmatch`, `gsub`, `format`, `rep`, `char`, `codepoint`, `upper`, `lower`.
+* `mw.title.*`: `makeTitle`, `new`, `getCurrentTitle`, `equals`, `compare`
+  plus the title object surface (`text`, `prefixedText`, `namespace`,
+  `nsText`, `fullUrl`, `inNamespace`, `subPageTitle`, …). Populated from
+  the renderer's parsed request title.
+* `mw.uri.*`: `encode`, `decode`, `anchorEncode`, `localUrl`, `fullUrl`,
+  `canonicalUrl`, `parse`.
+* `mw.message.*`: `new`, `newRawMessage`, `newFallbackSequence`, with
+  Message methods (`params`, `rawParams`, `numParams`, `inLanguage`,
+  `plain`, `text`, `parse`, `escaped`).
+* `mw.language.*`: `new`, `getContentLanguage`, plus the language object
+  (`getCode`, `lc`, `uc`, `lcfirst`, `ucfirst`, `formatNum`, `formatDate`,
+  `caseFold`, `isRTL`).
+* `mw.site.*`: `siteName`, `server`, `currentVersion`, `scriptPath`,
+  `stylePath`, `stats`.
+* `mw.html.create` with the full builder pattern (`tag`, `attr`, `addClass`,
+  `css`, `cssText`, `wikitext`, `newline`, `node`, `done`, `allDone`).
 * `mw.clone`, `mw.allToString`, `mw.dumpObject`, `mw.log`, `mw.logObject`,
-  `mw.getCurrentFrame`
+  `mw.hash.hashValue`, `mw.getCurrentFrame`.
 
-Modules that only depend on these helpers + Lua's standard library run
-end-to-end. Modules that need `mw.title` / `mw.html` / `mw.message` and
-re-enter PHP through `mw_interface` callbacks aren't supported yet –
-`wasmoon-lua5.1` 1.x can't suspend a Lua thread on a Promise-returning JS
-callback, so a full Scribunto-side `mw` would deadlock as soon as it had
-to call back into PHP.
+The Scribunto server's `executeFunction` path also bridges
+`frame.args[…]` back to PHP via the LuaStandalone protocol's
+`getAllExpandedArguments` callback, so user modules can read the
+`{{#invoke:Module|fn|positional|name=value}}` parameters that Scribunto
+expanded server-side. Nested `mw_interface` callbacks PHP makes while it's
+serving our request are dispatched inline against the same protocol loop
+(mirroring MWServer.lua's `dispatch`).
+
+`mw.loadData` / `mw.loadJsonData` raise an explicit error – they need
+multi-render shared state which we deliberately don't support in an
+offline previewer. Modules that need them should resolve their data via
+the renderer's `pageOverrides` instead.
 
 ## Public API
 

@@ -12,6 +12,20 @@ if ( !defined( 'STDIN' ) ) { define( 'STDIN', fopen( 'php://stdin', 'rb' ) ); }
 if ( !defined( 'STDOUT' ) ) { define( 'STDOUT', fopen( 'php://stdout', 'wb' ) ); }
 if ( !defined( 'STDERR' ) ) { define( 'STDERR', fopen( 'php://stderr', 'wb' ) ); }
 
+// Suppress PHP/WASM destructor sequence crashes (zend_std_write_property
+// "unreachable" trap) by clearing Scribunto's static state and exiting the
+// script before the destructor chain reaches whatever object PHP/WASM cannot
+// finalize cleanly. The on-disk response file is what the TypeScript backend
+// actually reads, so it's fine for PHP to bail at shutdown time.
+register_shutdown_function( static function (): void {
+	// Force Scribunto LuaStandalone state to a known empty state.
+	$cls = 'MediaWiki\\Extension\\Scribunto\\Engines\\LuaStandalone\\LuaStandaloneInterpreterFunction';
+	if ( class_exists( $cls, false ) ) {
+		$cls::$activeChunkIds = [];
+		$cls::$anyChunksDestroyed = [];
+	}
+} );
+
 $requestPath = $argv[1] ?? getenv( 'JA_UCP_REQUEST_PATH' ) ?: '';
 $localSettingsPath = $argv[2] ?? getenv( 'JA_UCP_LOCAL_SETTINGS' ) ?: '';
 $IP = $argv[3] ?? getenv( 'JA_UCP_MW_ROOT' ) ?: '';

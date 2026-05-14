@@ -242,6 +242,95 @@ describe("ja ucp renderer", () => {
     expect(result.html).toContain("/wiki/Hello_World?x=y");
   }, 600_000);
 
+  it("renders Scribunto modules that operate on Japanese text via mw.ustring", async () => {
+    const scribuntoBackend = createPhpWasmBackend({
+      workDir: ".ja-ucp-preview-work/vitest-scribunto-ustring",
+      scribuntoEnabled: true
+    });
+    const renderer = createJaUcpRenderer({ backend: scribuntoBackend });
+
+    const result = await renderer.render({
+      title: "Claude",
+      wikitext: "{{#invoke:UString|render}}",
+      pageOverrides: {
+        "Module:UString": {
+          contentModel: "Scribunto",
+          text: [
+            "local p = {}",
+            "function p.render(frame)",
+            "  local s = 'アンサイクロペディア'",
+            "  return 'len=' .. mw.ustring.len(s) .. ' first2=' .. mw.ustring.sub(s, 1, 2)",
+            "end",
+            "return p"
+          ].join("\n")
+        }
+      }
+    });
+
+    expect(result.html).toContain("len=10");
+    expect(result.html).toContain("first2=アン");
+  }, 600_000);
+
+  it("renders #invoke alongside a regular template override", async () => {
+    const scribuntoBackend = createPhpWasmBackend({
+      workDir: ".ja-ucp-preview-work/vitest-scribunto-mixed",
+      scribuntoEnabled: true
+    });
+    const renderer = createJaUcpRenderer({ backend: scribuntoBackend });
+
+    const result = await renderer.render({
+      title: "Claude",
+      wikitext: "Result: {{Greet|name=World}} and {{#invoke:Square|of}}.",
+      templateOverrides: {
+        Greet: "Hello {{{name|friend}}}"
+      },
+      pageOverrides: {
+        "Module:Square": {
+          contentModel: "Scribunto",
+          text: [
+            "local p = {}",
+            "function p.of(frame)",
+            "  return tostring(7 * 7)",
+            "end",
+            "return p"
+          ].join("\n")
+        }
+      }
+    });
+
+    expect(result.html).toContain("Hello World");
+    expect(result.html).toContain("49");
+  }, 600_000);
+
+  it("renders Scribunto modules that read frame.args from #invoke parameters", async () => {
+    const scribuntoBackend = createPhpWasmBackend({
+      workDir: ".ja-ucp-preview-work/vitest-scribunto-args",
+      scribuntoEnabled: true
+    });
+    const renderer = createJaUcpRenderer({ backend: scribuntoBackend });
+
+    const result = await renderer.render({
+      title: "Claude",
+      wikitext: "{{#invoke:Echo|render|hello|name=World}}",
+      pageOverrides: {
+        "Module:Echo": {
+          contentModel: "Scribunto",
+          text: [
+            "local p = {}",
+            "function p.render(frame)",
+            "  local first = frame.args[1] or 'no-1'",
+            "  local name = frame.args.name or 'no-name'",
+            "  return '[' .. tostring(first) .. ' | ' .. tostring(name) .. ']'",
+            "end",
+            "return p"
+          ].join("\n")
+        }
+      }
+    });
+
+    expect(result.html).toContain("[hello | World]");
+  }, 600_000);
+
   it("renders Scribunto modules that use mw.message", async () => {
     const scribuntoBackend = createPhpWasmBackend({
       workDir: ".ja-ucp-preview-work/vitest-scribunto-message",

@@ -1025,6 +1025,11 @@ export async function runScribuntoServer(
 
   const chunks = new Map<number, ChunkEntry>();
   let nextChunkId = 1;
+  // Latest registered library function id by function name. Each `registerLibrary`
+  // call from PHP arrives with its own uid suffix; we keep the most recent so
+  // we can call back into PHP via the Scribunto protocol (e.g. to fetch frame
+  // args, expand templates, …).
+  const registeredFuncs = new Map<string, string>();
 
   const stdinBuffer: Buffer[] = [];
   let stdinResolver: (() => void) | null = null;
@@ -1270,8 +1275,9 @@ return true`;
           // mw.executeFunction(chunk, frame_args...) – PHP calls this to
           // actually invoke the user module function we returned from
           // executeModule. The first arg is the function reference; remaining
-          // args carry the frame. For our skeleton implementation we just
-          // run the stored module-function chunk and return its results.
+          // args carry the frame. Before calling the user function we
+          // pre-fetch the frame's expanded #invoke args from PHP via
+          // `getAllExpandedArguments`, so user code can read frame.args[N].
           const args = (msg.args as Record<string, unknown>) ?? {};
           const fnRef = args["1"] as unknown;
           let fnId: number | undefined;
@@ -1301,10 +1307,44 @@ return true`;
           if (parent === undefined || !name) {
             return { op: "error", value: "executeFunction: missing binding" };
           }
+
+          // Pre-fetch frame.args from PHP. PHP's setupCurrentFrames() has
+          // already bound the active #invoke frame to the string id 'current'
+          // server-side, so we can ask `getAllExpandedArguments('current')`
+          // and get back the #invoke parameters that the user wrote (e.g.
+          // `{{#invoke:Mod|fn|hello|name=World}}` => {1: 'hello', name: 'World'}).
+          let frameArgsLua = "{}";
+          const parentFrameArgsLua = "{}";
+          try {
+            const fetched = await fetchExpandedArgs("current");
+            frameArgsLua = serializeArgsToLua(fetched);
+            debugLog(`fetched frame.args: ${JSON.stringify(fetched)}`);
+          } catch (err) {
+            debugLog(`getAllExpandedArguments fetch failed: ${err instanceof Error ? err.message : String(err)}`);
+          }
+
           const globalSlot = `__ja_ucp_module_${parent}`;
-          const result = (await lua.doString(
-            `return ${globalSlot}[${JSON.stringify(name)}]()`
-          )) as unknown;
+          const luaInvoke = `
+local __args = ${frameArgsLua}
+local __parent_args = ${parentFrameArgsLua}
+local __frame
+__frame = {
+	args = setmetatable(__args, { __index = function(t, k)
+		if type(k) == 'number' then return rawget(t, tostring(k)) end
+		return rawget(t, k)
+	end }),
+	getTitle = function() return __ja_ucp_context.title or '' end,
+	getArgument = function(_, n) return __frame.args[n] end,
+	getAllArguments = function() return __frame.args end,
+	getParent = function() return nil end,
+	newChild = function() return __frame end,
+	expandTemplate = function() return '' end,
+	callParserFunction = function() return '' end,
+	preprocess = function(_, s) return tostring(s or '') end
+}
+mw.getCurrentFrame = function() return __frame end
+return ${globalSlot}[${JSON.stringify(name)}](__frame)`;
+          const result = (await lua.doString(luaInvoke)) as unknown;
           const values: Record<number, unknown> = {};
           const arr = normalizeLuaReturn(result);
           arr.forEach((v, i) => {
@@ -1426,6 +1466,93 @@ return result`;
     }
   }
 
+  // Send a `call` message to PHP and wait for the matching `return` /
+  // `error` response, interleaving with any nested calls PHP makes back to
+  // us while it's processing ours. Mirrors MWServer.lua's `dispatch` loop.
+  async function dispatchToPhp(outgoing: ScribuntoMessage): Promise<ScribuntoMessage> {
+    const enc = encodeForPhp(outgoing);
+    debugLog(`dispatch -> PHP op=${outgoing.op} id=${JSON.stringify(outgoing.id)}`);
+    api.stdout(enc);
+    for (;;) {
+      const incoming = await readMessage();
+      if (!incoming) {
+        throw new Error("dispatchToPhp: stdin closed before reply arrived");
+      }
+      debugLog(`dispatch <- PHP op=${incoming.op}`);
+      if (incoming.op === "return" || incoming.op === "error") {
+        return incoming;
+      }
+      // Nested call from PHP – process it inline and reply, then keep waiting
+      // for our own reply.
+      let nestedResponse: ScribuntoMessage;
+      switch (incoming.op) {
+        case "loadString":
+          nestedResponse = await handleLoadString(incoming);
+          break;
+        case "call":
+          nestedResponse = await handleCall(incoming);
+          break;
+        case "registerLibrary": {
+          const fns = (incoming.functions as Record<string, unknown>) ?? {};
+          for (const [n, id] of Object.entries(fns)) {
+            if (typeof id === "string") registeredFuncs.set(n, id);
+          }
+          nestedResponse = { op: "return", nvalues: 0, values: {} };
+          break;
+        }
+        case "cleanupChunks": {
+          const ids = (incoming.ids as Record<string, unknown>) ?? {};
+          for (const id of chunks.keys()) {
+            if (!(String(id) in ids)) chunks.delete(id);
+          }
+          nestedResponse = { op: "return", nvalues: 0, values: {} };
+          break;
+        }
+        case "getStatus":
+          nestedResponse = {
+            op: "return",
+            nvalues: 1,
+            values: { 1: { pid: 1, time: 0, vsize: 0, rss: 0 } }
+          };
+          break;
+        default:
+          nestedResponse = { op: "error", value: `nested unknown op: ${incoming.op}` };
+      }
+      api.stdout(encodeForPhp(nestedResponse));
+    }
+  }
+
+  async function fetchExpandedArgs(frameId: string | number): Promise<Record<string, string>> {
+    const fnId = registeredFuncs.get("getAllExpandedArguments");
+    if (!fnId) return {};
+    const reply = await dispatchToPhp({
+      op: "call",
+      id: fnId,
+      nargs: 1,
+      args: { 1: frameId }
+    });
+    if (reply.op !== "return") return {};
+    const values = (reply.values as Record<string, unknown>) ?? {};
+    const first = values["1"];
+    if (typeof first !== "object" || first === null) return {};
+    const out: Record<string, string> = {};
+    for (const [k, v] of Object.entries(first as Record<string, unknown>)) {
+      if (v === undefined || v === null) continue;
+      out[k] = String(v);
+    }
+    return out;
+  }
+
+  function serializeArgsToLua(args: Record<string, string>): string {
+    const parts: string[] = [];
+    for (const [k, v] of Object.entries(args)) {
+      const numericKey = /^-?\d+$/.test(k);
+      const luaKey = numericKey ? `[${k}]` : `[${JSON.stringify(k)}]`;
+      parts.push(`${luaKey} = ${JSON.stringify(v)}`);
+    }
+    return `{${parts.join(", ")}}`;
+  }
+
   function stringifyLuaValue(value: unknown): unknown {
     // wasmoon returns Lua tables as proxy objects with `alive`, `thread`,
     // `ref`, `pointer` fields. Without crossing back into Lua to enumerate
@@ -1500,9 +1627,16 @@ return result`;
       case "call":
         response = await handleCall(msg);
         break;
-      case "registerLibrary":
+      case "registerLibrary": {
+        const fns = (msg.functions as Record<string, unknown>) ?? {};
+        for (const [name, id] of Object.entries(fns)) {
+          if (typeof id === "string") {
+            registeredFuncs.set(name, id);
+          }
+        }
         response = { op: "return", nvalues: 0, values: {} };
         break;
+      }
       case "wrapPhpFunction": {
         const id = nextChunkId++;
         response = { op: "return", nvalues: 1, values: { 1: id } };
