@@ -115,6 +115,37 @@ try {
 	file_put_contents( $responseFile, $encoded );
 
 	echo $encoded, "\n";
+
+	// Eagerly clean up Scribunto's interpreter object while we're still in
+	// user code, BEFORE PHP enters its shutdown destructor sequence. The
+	// PHP/WASM runtime currently traps "unreachable" inside one of the
+	// destructors when Scribunto's static chunk state is mutated from the
+	// destructor chain; doing the cleanup ourselves bypasses that path.
+	try {
+		$scribuntoEngineByParserClass = 'MediaWiki\\Extension\\Scribunto\\Hooks';
+		if ( class_exists( $scribuntoEngineByParserClass, false ) ) {
+			$prop = ( new ReflectionClass( $scribuntoEngineByParserClass ) )->getProperty( 'engineByParser' );
+			if ( $prop ) {
+				$prop->setAccessible( true );
+				$map = $prop->getValue() ?? [];
+				foreach ( $map as $engine ) {
+					if ( $engine !== null && method_exists( $engine, 'destroy' ) ) {
+						$engine->destroy();
+					}
+				}
+				$prop->setValue( null, [] );
+			}
+		}
+	} catch ( Throwable $cleanupErr ) {
+		fwrite( STDERR, "(scribunto cleanup ignored: " . $cleanupErr->getMessage() . ")\n" );
+	}
+	// Force Scribunto's static reference store to a known-empty state so the
+	// destructor chain doesn't recurse into a wasm-unsafe code path.
+	$staticCls = 'MediaWiki\\Extension\\Scribunto\\Engines\\LuaStandalone\\LuaStandaloneInterpreterFunction';
+	if ( class_exists( $staticCls, false ) ) {
+		$staticCls::$activeChunkIds = [];
+		$staticCls::$anyChunksDestroyed = [];
+	}
 } catch ( Throwable $e ) {
 	fwrite( STDERR, get_class( $e ) . ': ' . $e->getMessage() . "\n" . $e->getTraceAsString() . "\n" );
 	exit( 1 );

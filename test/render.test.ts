@@ -302,6 +302,34 @@ describe("ja ucp renderer", () => {
     expect(result.html).toContain("49");
   }, 600_000);
 
+  it("renders multiple Scribunto invocations through a single backend instance", async () => {
+    const scribuntoBackend = createPhpWasmBackend({
+      workDir: ".ja-ucp-preview-work/vitest-scribunto-multi",
+      scribuntoEnabled: true
+    });
+    const renderer = createJaUcpRenderer({ backend: scribuntoBackend });
+
+    const moduleSource = [
+      "local p = {}",
+      "function p.echo(frame) return tostring(frame.args[1] or '') end",
+      "return p"
+    ].join("\n");
+
+    const first = await renderer.render({
+      title: "Claude",
+      wikitext: "{{#invoke:Echo|echo|first}}",
+      pageOverrides: { "Module:Echo": { contentModel: "Scribunto", text: moduleSource } }
+    });
+    expect(first.html).toContain("first");
+
+    const second = await renderer.render({
+      title: "Claude",
+      wikitext: "{{#invoke:Echo|echo|second}}",
+      pageOverrides: { "Module:Echo": { contentModel: "Scribunto", text: moduleSource } }
+    });
+    expect(second.html).toContain("second");
+  }, 600_000);
+
   it("renders Scribunto modules that read frame.args from #invoke parameters", async () => {
     const scribuntoBackend = createPhpWasmBackend({
       workDir: ".ja-ucp-preview-work/vitest-scribunto-args",
