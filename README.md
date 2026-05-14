@@ -46,29 +46,33 @@ handler routes the spawned `lua` to a Node-side server backed by
 [`wasmoon-lua5.1`](https://www.npmjs.com/package/wasmoon-lua5.1) (no system
 Lua binary required).
 
-The Node-side server implements the LuaStandalone wire protocol (16-byte hex
-headers, PHP `serialize()` body, Lua-expression decoding) and exchanges
-`getStatus` / `cleanupChunks` / `loadString` / `call` /
-`registerLibrary` / `quit` messages with MediaWiki. However, executing modules
-that depend on `mw.*` requires also booting Scribunto's bundled
-`mwInit.lua` + `mw.lua` infrastructure inside the same Lua interpreter, which
-in turn re-enters PHP via `mw_interface` callbacks for each PHP-implemented
-library method. That re-entrancy can't be expressed in `wasmoon-lua5.1` 1.x
-because Lua 5.1 has no `:await()` for Promise-returning JS callbacks and the
-Promise returned by the JS-side `proc_open` callback can't be awaited from
-within a Lua-side `io.stdin:read()` call. Until that bridge lands, opting in
-will exchange the initial protocol handshake but fail before user `#invoke`
-output is produced.
+The Node-side server implements the LuaStandalone wire protocol:
+16-byte hex headers, PHP `serialize()` body, and a hand-written Lua-literal
+parser (the protocol's PHP→Lua bodies are evaluated outside wasmoon to avoid
+re-entry into the JS event loop that triggered an earlier deadlock). It
+intercepts Scribunto's bundled `mwInit.lua` / `mw.lua` / `mw.*.lua` files at
+`loadString` time and substitutes a JS-implemented `mw` package whose
+`executeModule` runs user modules through wasmoon-lua5.1, and whose
+`executeFunction` invokes the resolved Lua function and returns its primitive
+result to PHP.
 
-If you have a Lua 5.1 binary on the host, you can override the engine path:
+For trivial modules like
+`local p = {}; function p.hello(frame) return 'Lua_OK' end; return p`, the
+exchange completes end-to-end and wasmoon-lua5.1 produces the expected
+return value. The remaining gap is in PHP's shutdown path: when MediaWiki
+tears down its `LuaStandaloneInterpreterFunction` objects after rendering,
+their destructors trip a wasm "unreachable" trap inside
+`zend_std_write_property`. The trap kills the PHP/WASM runtime before the
+already-echoed JSON response can be read by Node, so the rendered result
+isn't observable through the public API yet. Working around that destructor
+crash – either by catching it inside `@php-wasm/node` or by structuring the
+fake `mw` package so PHP never gets a function reference to destroy – is the
+next step.
 
-```ts
-const backend = createPhpWasmBackend({
-  scribuntoEnabled: true
-});
-// then pass $wgScribuntoEngineConf['luastandalone']['luaPath'] via your
-// LocalSettings override – see src/backend/phpWasmBackend.ts.
-```
+Modules that touch `mw.title` / `mw.text` / `mw.html` / etc. are not yet
+supported because those require routing PHP-implemented callbacks back into
+Lua synchronously, and `wasmoon-lua5.1` 1.x doesn't expose Promise-await
+semantics that Lua 5.1 could use.
 
 ## Public API
 

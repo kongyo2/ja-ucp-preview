@@ -61,12 +61,17 @@ describe("ja ucp renderer", () => {
 
   it.skip("dispatches Scribunto #invoke through the bundled wasmoon-lua5.1 server (WIP)", async () => {
     // The wasmoon-lua5.1-backed Scribunto server in
-    // src/backend/scribuntoServer.ts exchanges the first ~10 LuaStandalone
-    // protocol messages successfully (registerLibrary, loadString, fake-mw
-    // package, executeModule dispatch). The remaining work to make this
-    // green is bridging Scribunto's `mw_interface` re-entry callbacks, which
-    // need Promise-await semantics that wasmoon-lua5.1 1.x does not expose;
-    // see README "Scribunto / Lua" for details.
+    // src/backend/scribuntoServer.ts now exchanges the full LuaStandalone
+    // protocol for simple `{{#invoke}}` modules: registerLibrary,
+    // loadString, fake-mw package, executeModule dispatch, executeFunction
+    // dispatch. wasmoon-lua5.1 actually executes the user module and
+    // returns "Lua_OK" to PHP. The remaining failure is in PHP's shutdown
+    // path: when LuaStandaloneInterpreterFunction objects run their
+    // destructors they trip a wasm "unreachable" trap inside
+    // zend_std_write_property. The trap kills the wasm runtime before
+    // php.run / php.runStream can return the already-echo'd JSON, so the
+    // test still cannot observe "Lua_OK" in the result. Skip until that
+    // shutdown crash is worked around (see README "Scribunto / Lua").
     const scribuntoBackend = createPhpWasmBackend({
       workDir: ".ja-ucp-preview-work/vitest-scribunto",
       scribuntoEnabled: true

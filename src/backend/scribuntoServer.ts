@@ -32,6 +32,248 @@ function debugLog(line: string): void {
   }
 }
 
+// Hand-written parser for the Lua table-literal subset that Scribunto's
+// LuaStandalone protocol uses for PHP -> Lua message bodies. Supports:
+//   - Table constructors: `{ ... }`
+//   - Bracketed keys: `["op"] = "call"`
+//   - Identifier keys: `op = "call"` (not used by the protocol, but accept it)
+//   - Sequential values: `{1, 2, 3}` -> 1-based array
+//   - String literals: `"…"` (with Lua \r \n \\ and \" escapes)
+//   - Numbers (decimal integers and decimals)
+//   - Booleans `true`/`false`
+//   - `nil`
+// Does NOT support: long-bracket strings, hex/scientific numbers, function
+// calls, or arbitrary Lua expressions (none of which appear in protocol
+// messages).
+function parseLuaTableLiteral(source: string): unknown {
+  const ctx = { src: source, pos: 0 };
+  skipWs(ctx);
+  const value = readLuaValue(ctx);
+  skipWs(ctx);
+  if (ctx.pos !== ctx.src.length) {
+    throw new Error(`trailing content after Lua value at position ${ctx.pos}`);
+  }
+  return value;
+}
+
+interface ParseCtx {
+  src: string;
+  pos: number;
+}
+
+function skipWs(ctx: ParseCtx): void {
+  while (ctx.pos < ctx.src.length) {
+    const c = ctx.src[ctx.pos] ?? "";
+    if (c === " " || c === "\t" || c === "\n" || c === "\r") {
+      ctx.pos++;
+    } else if (c === "-" && ctx.src[ctx.pos + 1] === "-") {
+      // Line comment
+      while (ctx.pos < ctx.src.length && ctx.src[ctx.pos] !== "\n") ctx.pos++;
+    } else {
+      break;
+    }
+  }
+}
+
+function readLuaValue(ctx: ParseCtx): unknown {
+  skipWs(ctx);
+  if (ctx.pos >= ctx.src.length) throw new Error("unexpected EOF");
+  const c = ctx.src[ctx.pos] ?? "";
+  if (c === "{") return readLuaTable(ctx);
+  if (c === '"' || c === "'") return readLuaString(ctx);
+  if (c === "-" || (c >= "0" && c <= "9")) return readLuaNumber(ctx);
+  // Try identifier / keyword
+  return readLuaIdentOrKeyword(ctx);
+}
+
+function readLuaTable(ctx: ParseCtx): Record<string, unknown> {
+  if (ctx.src[ctx.pos] !== "{") throw new Error(`expected '{' at ${ctx.pos}`);
+  ctx.pos++;
+  skipWs(ctx);
+  const out: Record<string, unknown> = {};
+  let seq = 1;
+  if (ctx.src[ctx.pos] === "}") {
+    ctx.pos++;
+    return out;
+  }
+  while (true) {
+    skipWs(ctx);
+    let key: string | null = null;
+    if (ctx.src[ctx.pos] === "[") {
+      ctx.pos++;
+      skipWs(ctx);
+      const k = readLuaValue(ctx);
+      skipWs(ctx);
+      if (ctx.src[ctx.pos] !== "]") throw new Error(`expected ']' at ${ctx.pos}`);
+      ctx.pos++;
+      key = String(k);
+    } else {
+      // Possibly identifier key `name = value`. We need to peek ahead.
+      const savedPos = ctx.pos;
+      const ident = tryReadIdent(ctx);
+      skipWs(ctx);
+      if (ident !== null && ctx.src[ctx.pos] === "=") {
+        key = ident;
+      } else {
+        // Not an identifier-key; rewind and treat the whole thing as a value
+        // in the sequential portion of the table.
+        ctx.pos = savedPos;
+      }
+    }
+    if (key !== null) {
+      skipWs(ctx);
+      if (ctx.src[ctx.pos] !== "=") throw new Error(`expected '=' at ${ctx.pos}`);
+      ctx.pos++;
+      skipWs(ctx);
+      out[key] = readLuaValue(ctx);
+    } else {
+      out[String(seq++)] = readLuaValue(ctx);
+    }
+    skipWs(ctx);
+    const ch = ctx.src[ctx.pos];
+    if (ch === "," || ch === ";") {
+      ctx.pos++;
+      skipWs(ctx);
+      if (ctx.src[ctx.pos] === "}") {
+        ctx.pos++;
+        return out;
+      }
+      continue;
+    }
+    if (ch === "}") {
+      ctx.pos++;
+      return out;
+    }
+    throw new Error(`expected ',' or '}' at ${ctx.pos}, got '${ch}'`);
+  }
+}
+
+function tryReadIdent(ctx: ParseCtx): string | null {
+  const c = ctx.src[ctx.pos] ?? "";
+  if (!((c >= "a" && c <= "z") || (c >= "A" && c <= "Z") || c === "_")) return null;
+  let end = ctx.pos + 1;
+  while (end < ctx.src.length) {
+    const c2 = ctx.src[end] ?? "";
+    if (
+      (c2 >= "a" && c2 <= "z") ||
+      (c2 >= "A" && c2 <= "Z") ||
+      (c2 >= "0" && c2 <= "9") ||
+      c2 === "_"
+    ) {
+      end++;
+    } else {
+      break;
+    }
+  }
+  const ident = ctx.src.slice(ctx.pos, end);
+  ctx.pos = end;
+  return ident;
+}
+
+function readLuaString(ctx: ParseCtx): string {
+  const quote = ctx.src[ctx.pos];
+  if (quote !== '"' && quote !== "'") throw new Error(`expected string at ${ctx.pos}`);
+  ctx.pos++;
+  let out = "";
+  while (ctx.pos < ctx.src.length) {
+    const c = ctx.src[ctx.pos];
+    if (c === quote) {
+      ctx.pos++;
+      return out;
+    }
+    if (c === "\\") {
+      const next = ctx.src[ctx.pos + 1];
+      if (next === undefined) throw new Error("unterminated escape");
+      if (next === "n") {
+        out += "\n";
+        ctx.pos += 2;
+      } else if (next === "r") {
+        out += "\r";
+        ctx.pos += 2;
+      } else if (next === "t") {
+        out += "\t";
+        ctx.pos += 2;
+      } else if (next === "0") {
+        out += "\0";
+        ctx.pos += 2;
+      } else if (next === "\\") {
+        out += "\\";
+        ctx.pos += 2;
+      } else if (next === '"') {
+        out += '"';
+        ctx.pos += 2;
+      } else if (next === "'") {
+        out += "'";
+        ctx.pos += 2;
+      } else if (next >= "0" && next <= "9") {
+        // Lua decimal escape: up to 3 digits
+        let digits = "";
+        let p = ctx.pos + 1;
+        while (digits.length < 3 && p < ctx.src.length) {
+          const d = ctx.src[p];
+          if (d && d >= "0" && d <= "9") {
+            digits += d;
+            p++;
+          } else {
+            break;
+          }
+        }
+        out += String.fromCharCode(parseInt(digits, 10));
+        ctx.pos = p;
+      } else {
+        out += next;
+        ctx.pos += 2;
+      }
+    } else {
+      out += c;
+      ctx.pos++;
+    }
+  }
+  throw new Error("unterminated string literal");
+}
+
+function readLuaNumber(ctx: ParseCtx): number {
+  let end = ctx.pos;
+  if (ctx.src[end] === "-") end++;
+  while (end < ctx.src.length) {
+    const c = ctx.src[end] ?? "";
+    if ((c >= "0" && c <= "9") || c === ".") {
+      end++;
+    } else {
+      break;
+    }
+  }
+  const text = ctx.src.slice(ctx.pos, end);
+  ctx.pos = end;
+  const num = Number(text);
+  if (!Number.isFinite(num)) throw new Error(`invalid number "${text}"`);
+  return num;
+}
+
+function readLuaIdentOrKeyword(ctx: ParseCtx): unknown {
+  const ident = tryReadIdent(ctx);
+  if (ident === null) throw new Error(`unexpected character at ${ctx.pos}`);
+  if (ident === "true") return true;
+  if (ident === "false") return false;
+  if (ident === "nil") return null;
+  // `chunks[N]` references – Scribunto's PHP-side encodes a previously seen
+  // function value back to Lua by emitting `chunks[<id>]`. We translate it
+  // into our function-id marker so handlers can recognize it.
+  if (ident === "chunks") {
+    skipWs(ctx);
+    if (ctx.src[ctx.pos] === "[") {
+      ctx.pos++;
+      skipWs(ctx);
+      const idVal = readLuaNumber(ctx);
+      skipWs(ctx);
+      if (ctx.src[ctx.pos] !== "]") throw new Error(`expected ']' after chunks[ at ${ctx.pos}`);
+      ctx.pos++;
+      return { __scribunto_function_id__: idVal };
+    }
+  }
+  return ident;
+}
+
 export interface SpawnApi {
   notifySpawn(): void;
   stdout(data: string | ArrayBuffer | Uint8Array): void;
@@ -48,7 +290,17 @@ interface ScribuntoMessage {
 interface ChunkEntry {
   source: string;
   chunkName: string;
-  kind: "user" | "fake-mw-package" | "fake-setupInterface" | "fake-executeModule" | "fake-clone" | "fake-noop" | "module-function";
+  kind:
+    | "user"
+    | "fake-mw-package"
+    | "fake-mw-sub"
+    | "fake-setupInterface"
+    | "fake-executeModule"
+    | "fake-executeFunction"
+    | "fake-getLogBuffer"
+    | "fake-clone"
+    | "fake-noop"
+    | "module-function";
   // For module-function: parent chunkId (the module's chunk) and the
   // function name inside the returned table.
   parentChunkId?: number;
@@ -116,7 +368,7 @@ export async function runScribuntoServer(
     }
   });
 
-  async function readBytes(n: number): Promise<Buffer> {
+  async function readBytes(n: number, allowIdleTimeout = false): Promise<Buffer | null> {
     if (n === 0) return Buffer.alloc(0);
     for (;;) {
       const total = stdinBuffer.reduce((a, b) => a + b.length, 0);
@@ -126,37 +378,51 @@ export async function runScribuntoServer(
         if (all.length > n) stdinBuffer.push(all.subarray(n));
         return all.subarray(0, n);
       }
-      await new Promise<void>((resolve) => {
-        stdinResolver = resolve;
+      // The "main loop" idle wait can give up after a few seconds with no
+      // input – that's the signal that PHP has finished with our lua process
+      // and the spawn handler should let the runtime tear down cleanly.
+      const got = await new Promise<boolean>((resolve) => {
+        stdinResolver = () => resolve(true);
+        if (allowIdleTimeout) {
+          setTimeout(() => resolve(false), 30000);
+        }
       });
+      if (!got && allowIdleTimeout) {
+        return null;
+      }
     }
   }
 
-  async function readMessage(): Promise<ScribuntoMessage> {
-    const header = await readBytes(16);
+  async function readMessage(): Promise<ScribuntoMessage | null> {
+    const header = await readBytes(16, true);
+    if (!header) return null;
     const lenHex = header.toString("utf8", 0, 8);
     const length = parseInt(lenHex, 16);
     if (!Number.isFinite(length) || length < 0) {
       throw new Error(`Invalid Scribunto header length: ${lenHex}`);
     }
     const body = await readBytes(length);
+    if (!body) return null;
     const bodyStr = body.toString("utf8");
     debugLog(`raw body (${length} bytes): ${bodyStr.slice(0, 200)}`);
-    // The body is a Lua expression. Wrap with `return` and evaluate; `chunks`
-    // is referenced occasionally so we expose an empty table to satisfy
-    // resolution at minimum.
+    // The body is a Lua expression. We *could* parse it via `lua.doString`,
+    // but every readMessage cycle would then await wasmoon - and wasmoon
+    // appears to deadlock when its async run loop is re-entered from inside a
+    // PHP/WASM spawn handler. Parse the body manually instead; the protocol
+    // only uses a small subset of Lua-literal syntax that fits in a hand
+    // written parser.
     let result: unknown;
     try {
-      result = await lua.doString(`local chunks = chunks or {}; return ${bodyStr}`);
+      result = parseLuaTableLiteral(bodyStr);
     } catch (error: unknown) {
       throw new Error(
-        `Scribunto message Lua-eval failed: ${
+        `Scribunto message parse failed: ${
           error instanceof Error ? error.message : String(error)
         }; body: ${bodyStr.slice(0, 200)}`
       );
     }
     if (!result || typeof result !== "object") {
-      throw new Error(`Scribunto message did not evaluate to a table: ${bodyStr.slice(0, 200)}`);
+      throw new Error(`Scribunto message did not parse to a table: ${bodyStr.slice(0, 200)}`);
     }
     return result as ScribuntoMessage;
   }
@@ -246,6 +512,19 @@ export async function runScribuntoServer(
       chunks.set(id, { source: text, chunkName, kind: "fake-mw-package" });
       return { op: "return", nvalues: 1, values: { 1: id } };
     }
+    // Other Scribunto-bundled libraries (mw.text.lua, mw.uri.lua, mw.site.lua,
+    // mw.html.lua, mw.message.lua, mw.hash.lua, mw.language.lua, etc) – stub
+    // out the whole package as a returns-an-empty-table chunk so that
+    // require/setupInterface paths don't blow up when our user module never
+    // touches them.
+    if (
+      baseName.startsWith("mw.") && baseName.endsWith(".lua") ||
+      baseName === "libraryUtil.lua" ||
+      baseName === "bit32.lua"
+    ) {
+      chunks.set(id, { source: text, chunkName, kind: "fake-mw-sub" });
+      return { op: "return", nvalues: 1, values: { 1: id } };
+    }
 
     try {
       const luaCode = `local fn, err = loadstring(${JSON.stringify(text)}, ${JSON.stringify(chunkName)})
@@ -284,8 +563,10 @@ return true`;
           // "package" table that LuaEngine.php stores as $this->mw. The PHP
           // engine indexes into it for executeModule / setupInterface / etc.
           const setupId = mkFakeChunk("fake-setupInterface");
-          const execId = mkFakeChunk("fake-executeModule");
+          const execModId = mkFakeChunk("fake-executeModule");
+          const execFnId = mkFakeChunk("fake-executeFunction");
           const cloneId = mkFakeChunk("fake-clone");
+          const logId = mkFakeChunk("fake-getLogBuffer");
           const noopId = mkFakeChunk("fake-noop");
           return {
             op: "return",
@@ -293,8 +574,11 @@ return true`;
             values: {
               1: {
                 setupInterface: { __scribunto_function_id__: setupId },
-                executeModule: { __scribunto_function_id__: execId },
+                executeModule: { __scribunto_function_id__: execModId },
+                executeFunction: { __scribunto_function_id__: execFnId },
                 clone: { __scribunto_function_id__: cloneId },
+                getLogBuffer: { __scribunto_function_id__: logId },
+                clearLogBuffer: { __scribunto_function_id__: noopId },
                 allToString: { __scribunto_function_id__: noopId },
                 tostringOrNil: { __scribunto_function_id__: noopId }
               }
@@ -306,6 +590,68 @@ return true`;
         case "fake-clone":
         case "fake-noop":
           return { op: "return", nvalues: 0, values: {} };
+
+        case "fake-getLogBuffer":
+          return { op: "return", nvalues: 1, values: { 1: "" } };
+
+        case "fake-executeFunction": {
+          // mw.executeFunction(chunk, frame_args...) – PHP calls this to
+          // actually invoke the user module function we returned from
+          // executeModule. The first arg is the function reference; remaining
+          // args carry the frame. For our skeleton implementation we just
+          // run the stored module-function chunk and return its results.
+          const args = (msg.args as Record<string, unknown>) ?? {};
+          const fnRef = args["1"] as unknown;
+          let fnId: number | undefined;
+          if (
+            typeof fnRef === "object" &&
+            fnRef !== null &&
+            typeof (fnRef as { __scribunto_function_id__?: unknown }).__scribunto_function_id__ ===
+              "number"
+          ) {
+            fnId = (fnRef as { __scribunto_function_id__: number }).__scribunto_function_id__;
+          }
+          if (fnId === undefined || !chunks.has(fnId)) {
+            return {
+              op: "error",
+              value: "executeFunction: missing function reference"
+            };
+          }
+          const target = chunks.get(fnId)!;
+          if (target.kind !== "module-function") {
+            return {
+              op: "error",
+              value: `executeFunction: target chunk is ${target.kind}, not module-function`
+            };
+          }
+          const parent = target.parentChunkId;
+          const name = target.functionName;
+          if (parent === undefined || !name) {
+            return { op: "error", value: "executeFunction: missing binding" };
+          }
+          const globalSlot = `__ja_ucp_module_${parent}`;
+          const result = (await lua.doString(
+            `return ${globalSlot}[${JSON.stringify(name)}]()`
+          )) as unknown;
+          const values: Record<number, unknown> = {};
+          const arr = normalizeLuaReturn(result);
+          arr.forEach((v, i) => {
+            values[i + 1] = stringifyLuaValue(v);
+          });
+          return { op: "return", nvalues: arr.length, values };
+        }
+
+        case "fake-mw-sub": {
+          // Stub mw.*.lua / libraryUtil.lua: return an empty package table
+          // plus a no-op setupInterface so require()/setupInterface() that
+          // mw.lua wires up don't crash.
+          const setupId = mkFakeChunk("fake-noop");
+          return {
+            op: "return",
+            nvalues: 1,
+            values: { 1: { setupInterface: { __scribunto_function_id__: setupId } } }
+          };
+        }
 
         case "fake-executeModule": {
           // args: 1=chunkId of user module, 2=function name, 3=frame
@@ -437,10 +783,22 @@ return result`;
   void readFile; // ensure import stays available for future expansion
 
   while (true) {
-    let msg: ScribuntoMessage;
+    let msg: ScribuntoMessage | null;
     try {
       debugLog("waiting for message");
       msg = await readMessage();
+      if (!msg) {
+        // Idle timeout fired – PHP hasn't sent any more messages, so the
+        // parent renderer is probably done with this Scribunto instance.
+        // Keep the spawn handler alive (do not call api.exit) so PHP can
+        // continue its own teardown without tripping the wasm runtime; just
+        // park here until something else terminates the process.
+        debugLog("stdin idle, parking Scribunto server");
+        await new Promise<void>(() => {
+          /* never resolves */
+        });
+        return;
+      }
       debugLog(`got message op=${msg.op}${
         msg.op === "call" ? ` id=${JSON.stringify(msg.id)} args=${JSON.stringify(msg.args)}` : ""
       }${msg.op === "loadString" ? ` chunkName=${JSON.stringify(msg.chunkName)} textLen=${String(msg.text).length}` : ""}`);
@@ -511,7 +869,7 @@ return result`;
     debugLog(
       `sending response op=${response.op} bytes=${enc.length}${
         response.op === "error" ? ` value=${JSON.stringify((response as { value?: unknown }).value)}` : ""
-      }`
+      } body=${enc.toString("utf8").slice(16, 316)}`
     );
     api.stdout(enc);
   }
