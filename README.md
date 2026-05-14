@@ -46,33 +46,42 @@ handler routes the spawned `lua` to a Node-side server backed by
 [`wasmoon-lua5.1`](https://www.npmjs.com/package/wasmoon-lua5.1) (no system
 Lua binary required).
 
-The Node-side server implements the LuaStandalone wire protocol:
-16-byte hex headers, PHP `serialize()` body, and a hand-written Lua-literal
-parser (the protocol's PHP→Lua bodies are evaluated outside wasmoon to avoid
-re-entry into the JS event loop that triggered an earlier deadlock). It
-intercepts Scribunto's bundled `mwInit.lua` / `mw.lua` / `mw.*.lua` files at
-`loadString` time and substitutes a JS-implemented `mw` package whose
-`executeModule` runs user modules through wasmoon-lua5.1, and whose
-`executeFunction` invokes the resolved Lua function and returns its primitive
-result to PHP.
+The Node-side server implements the LuaStandalone wire protocol – 16-byte
+hex headers, PHP `serialize()` body, and a hand-written Lua-literal parser
+(the protocol's PHP→Lua bodies are parsed outside wasmoon to avoid re-entry
+into the JS event loop). It intercepts Scribunto's bundled `mwInit.lua` /
+`mw.lua` / `mw.*.lua` files at `loadString` time and substitutes a
+JS-implemented `mw` package whose `executeModule` runs user modules through
+wasmoon-lua5.1, and whose `executeFunction` invokes the resolved Lua
+function and returns its primitive result to PHP.
 
-For trivial modules like
-`local p = {}; function p.hello(frame) return 'Lua_OK' end; return p`, the
-exchange completes end-to-end and wasmoon-lua5.1 produces the expected
-return value. The remaining gap is in PHP's shutdown path: when MediaWiki
-tears down its `LuaStandaloneInterpreterFunction` objects after rendering,
-their destructors trip a wasm "unreachable" trap inside
-`zend_std_write_property`. The trap kills the PHP/WASM runtime before the
-already-echoed JSON response can be read by Node, so the rendered result
-isn't observable through the public API yet. Working around that destructor
-crash – either by catching it inside `@php-wasm/node` or by structuring the
-fake `mw` package so PHP never gets a function reference to destroy – is the
-next step.
+The bridge writes the rendered JSON to a sidecar file before returning, so
+the TypeScript backend can recover the response even if PHP/WASM trips a
+wasm trap during its shutdown destructor sequence (which it currently does
+after Scribunto-using renders – the trap is swallowed by an in-process
+`uncaughtException` handler installed for the duration of the render).
+
+```ts
+const backend = createPhpWasmBackend({ scribuntoEnabled: true });
+const renderer = createJaUcpRenderer({ backend });
+const { html } = await renderer.render({
+  title: "Claude",
+  wikitext: "{{#invoke:Example|hello}}",
+  pageOverrides: {
+    "Module:Example": {
+      contentModel: "Scribunto",
+      text: "local p = {}; function p.hello(frame) return 'Lua_OK' end; return p"
+    }
+  }
+});
+// html contains "Lua_OK"
+```
 
 Modules that touch `mw.title` / `mw.text` / `mw.html` / etc. are not yet
-supported because those require routing PHP-implemented callbacks back into
+fully supported – those require routing PHP-implemented callbacks back into
 Lua synchronously, and `wasmoon-lua5.1` 1.x doesn't expose Promise-await
-semantics that Lua 5.1 could use.
+semantics that Lua 5.1 could use. Simple modules that only use Lua's
+standard library work end-to-end today.
 
 ## Public API
 

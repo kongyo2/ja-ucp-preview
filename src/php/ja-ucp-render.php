@@ -91,7 +91,16 @@ try {
 		]
 	];
 
-	echo json_encode( $result, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR ), "\n";
+	$encoded = json_encode( $result, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR );
+
+	// Write the response to a file (read by the TypeScript backend) AND
+	// echo to stdout. The file is the authoritative response: PHP/WASM can
+	// trap during shutdown destructors after this point, but the rendered
+	// JSON has already been persisted to disk.
+	$responseFile = $requestPath . '.response';
+	file_put_contents( $responseFile, $encoded );
+
+	echo $encoded, "\n";
 } catch ( Throwable $e ) {
 	fwrite( STDERR, get_class( $e ) . ': ' . $e->getMessage() . "\n" . $e->getTraceAsString() . "\n" );
 	exit( 1 );

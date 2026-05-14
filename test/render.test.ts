@@ -59,7 +59,7 @@ describe("ja ucp renderer", () => {
     expect(result.html).toContain(".mw-parser-output .ja-ucp-smoke{color:#0645ad}");
   }, 600_000);
 
-  it.skip("dispatches Scribunto #invoke through the bundled wasmoon-lua5.1 server (WIP)", async () => {
+  it("dispatches Scribunto #invoke through the bundled wasmoon-lua5.1 server", async () => {
     // The wasmoon-lua5.1-backed Scribunto server in
     // src/backend/scribuntoServer.ts now exchanges the full LuaStandalone
     // protocol for simple `{{#invoke}}` modules: registerLibrary,

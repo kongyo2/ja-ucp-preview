@@ -153,49 +153,79 @@ export class PhpWasmBackend implements RendererBackend {
     };
 
     await writeFile(requestPath, JSON.stringify(payload), "utf8");
+    const responseFile = `${requestPath}.response`;
+    // PHP/WASM can throw a wasm "unreachable" trap during script shutdown
+    // (especially when Scribunto destructors run after the bridge has already
+    // produced its JSON payload). The trap escapes the runtime as a
+    // synchronous Error, so install a temporary process-level handler that
+    // swallows it; without this the entire Node process would die.
+    let wasmTrapped = false;
+    const onUncaught = (err: Error) => {
+      if (String(err?.message).includes("unreachable")) {
+        wasmTrapped = true;
+      } else {
+        throw err;
+      }
+    };
+    const onUnhandledRejection = (err: unknown) => {
+      const message = err instanceof Error ? err.message : String(err);
+      if (message.includes("unreachable")) {
+        wasmTrapped = true;
+      }
+    };
+    process.on("uncaughtException", onUncaught);
+    process.on("unhandledRejection", onUnhandledRejection);
+
     const captureBuffer = { stdout: "", stderr: "" };
     try {
-      let response: PhpResponse;
-      try {
-        response = await runPhpScript(
-          php,
-          this.bridgePath,
-          [requestPath, installation.localSettingsPath, this.mediaWikiRoot],
-          {
-            MW_INSTALL_PATH: this.mediaWikiRoot,
-            HOME: this.workDir,
-            TMPDIR: join(this.workDir, "tmp")
-          },
-          captureBuffer
-        );
-      } catch (error: unknown) {
-        // The bridge may have already echo'd a complete JSON document before
-        // the wasm trap fired (Scribunto's destructor path can trip the
-        // PHP/WASM runtime even though the rendered HTML is already on
-        // stdout). Try to recover it from the streaming capture buffer.
-        const recovered = captureBuffer.stdout.trim();
-        if (recovered.startsWith("{") && recovered.endsWith("}")) {
-          try {
-            return JSON.parse(recovered) as RenderResult;
-          } catch {
-            /* fall through */
-          }
+      const runPromise = runPhpScript(
+        php,
+        this.bridgePath,
+        [requestPath, installation.localSettingsPath, this.mediaWikiRoot],
+        {
+          MW_INSTALL_PATH: this.mediaWikiRoot,
+          HOME: this.workDir,
+          TMPDIR: join(this.workDir, "tmp")
+        },
+        captureBuffer
+      ).then(
+        (r) => ({ kind: "ok" as const, response: r }),
+        (err) => ({ kind: "error" as const, error: err })
+      );
+
+      // Race the PHP run against polling the response file. The bridge writes
+      // the rendered JSON to `<requestPath>.response` BEFORE PHP's shutdown
+      // destructor sequence runs, so the file is present even if the wasm
+      // runtime later traps and runPhpScript never resolves.
+      const fileWatcher = waitForResponseFile(responseFile, () => wasmTrapped);
+
+      const outcome = await Promise.race([runPromise, fileWatcher]);
+
+      if (outcome.kind === "ok") {
+        const text = outcome.response.text.trim();
+        try {
+          return JSON.parse(text) as RenderResult;
+        } catch (error) {
+          throw new ExactMediaWikiRuntimeError(
+            `MediaWiki render bridge did not return JSON.\nSTDOUT:\n${outcome.response.text}\nSTDERR:\n${outcome.response.errors}`
+          );
         }
-        // Reset the cached PHP instance so subsequent renders get a fresh
-        // wasm runtime (the current one is now poisoned by the trap).
+      }
+
+      if (outcome.kind === "file") {
+        // The bridge wrote its response to disk. The wasm runtime may still
+        // be in the middle of its destructor crash, so discard the cached
+        // PHP instance and let the next render boot a fresh one.
         delete this.phpPromise;
-        throw error;
+        return JSON.parse(outcome.text) as RenderResult;
       }
-      const text = response.text.trim();
-      try {
-        return JSON.parse(text) as RenderResult;
-      } catch (error) {
-        throw new ExactMediaWikiRuntimeError(
-          `MediaWiki render bridge did not return JSON.\nSTDOUT:\n${response.text}\nSTDERR:\n${response.errors}`
-        );
-      }
+
+      throw outcome.error;
     } finally {
+      process.off("uncaughtException", onUncaught);
+      process.off("unhandledRejection", onUnhandledRejection);
       await rm(requestPath, { force: true });
+      await rm(responseFile, { force: true });
     }
   }
 
@@ -470,6 +500,42 @@ export function createPhpWasmBackend(options: PhpWasmBackendOptions = {}): PhpWa
   return new PhpWasmBackend(options);
 }
 
+async function waitForResponseFile(
+  path: string,
+  trapped: () => boolean
+): Promise<{ kind: "file"; text: string }> {
+  const { readFile: readFileAsync, stat } = await import("node:fs/promises");
+  // Poll the response file. The bridge writes it atomically so the JSON is
+  // complete by the time stat() sees it. After the wasm trap is observed we
+  // also force-check once more to handle very short windows.
+  for (;;) {
+    try {
+      const stats = await stat(path);
+      if (stats.size > 0) {
+        const text = await readFileAsync(path, "utf8");
+        if (text.trim().startsWith("{") && text.trim().endsWith("}")) {
+          return { kind: "file", text };
+        }
+      }
+    } catch {
+      /* file not yet present */
+    }
+    // When the wasm trap fires, give it one extra poll cycle in case the
+    // file write was racing the shutdown sequence.
+    if (trapped()) {
+      try {
+        const text = await readFileAsync(path, "utf8");
+        if (text.trim().startsWith("{") && text.trim().endsWith("}")) {
+          return { kind: "file", text };
+        }
+      } catch {
+        /* still missing */
+      }
+    }
+    await new Promise<void>((resolve) => setTimeout(resolve, 100));
+  }
+}
+
 async function runPhpScript(
   php: PhpInstance,
   scriptPath: string,
@@ -496,38 +562,28 @@ require ${jsonString(scriptPath)};
   // Prefer runStream when available so we can pipe output to `captureBuffer`
   // and recover it even when the wasm runtime traps during PHP shutdown
   // (which Scribunto's destructor sequence can trigger).
-  if (captureBuffer && typeof php.runStream === "function") {
-    const streamed = await php.runStream({ code: seedScript, env });
-    const decoder = new TextDecoder();
-    const stdoutReader = streamed.stdout.getReader();
-    const stderrReader = streamed.stderr.getReader();
-    const readAll = async (reader: ReadableStreamDefaultReader<Uint8Array>, sink: "stdout" | "stderr") => {
-      try {
-        for (;;) {
-          const { value, done } = await reader.read();
-          if (done) break;
-          if (value && value.byteLength > 0) {
-            captureBuffer[sink] += decoder.decode(value, { stream: true });
-          }
-        }
-      } catch {
-        /* the wasm trap can also surface here; ignore so we still resolve */
-      }
-    };
-    const drained = Promise.all([readAll(stdoutReader, "stdout"), readAll(stderrReader, "stderr")]);
-    let exitCode = 0;
+  if (captureBuffer) {
+    // Run via php.run; the caller is responsible for handling wasm traps and
+    // potentially recovering the response from elsewhere (e.g. the bridge's
+    // on-disk response file) if this never resolves.
     try {
-      exitCode = await streamed.exitCode;
-    } catch {
-      exitCode = 1;
+      const response = await php.run({ code: seedScript, env });
+      captureBuffer.stdout = response.text;
+      captureBuffer.stderr = response.errors;
+      if (response.exitCode !== 0) {
+        throw new ExactMediaWikiRuntimeError(
+          `php-wasm script ${scriptPath} exited with ${response.exitCode}.\nSTDOUT:\n${response.text}\nSTDERR:\n${response.errors}`
+        );
+      }
+      return response;
+    } catch (err) {
+      const maybeResp = (err as { response?: PhpResponse }).response;
+      if (maybeResp) {
+        captureBuffer.stdout = maybeResp.text;
+        captureBuffer.stderr = maybeResp.errors;
+      }
+      throw err;
     }
-    await drained;
-    if (exitCode !== 0) {
-      throw new ExactMediaWikiRuntimeError(
-        `php-wasm script ${scriptPath} exited with ${exitCode}.\nSTDOUT:\n${captureBuffer.stdout}\nSTDERR:\n${captureBuffer.stderr}`
-      );
-    }
-    return { text: captureBuffer.stdout, errors: captureBuffer.stderr, exitCode };
   }
 
   const response = await php.run({ code: seedScript, env });

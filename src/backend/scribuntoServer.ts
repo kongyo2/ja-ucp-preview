@@ -384,7 +384,7 @@ export async function runScribuntoServer(
       const got = await new Promise<boolean>((resolve) => {
         stdinResolver = () => resolve(true);
         if (allowIdleTimeout) {
-          setTimeout(() => resolve(false), 30000);
+          setTimeout(() => resolve(false), 3000);
         }
       });
       if (!got && allowIdleTimeout) {
@@ -790,13 +790,16 @@ return result`;
       if (!msg) {
         // Idle timeout fired – PHP hasn't sent any more messages, so the
         // parent renderer is probably done with this Scribunto instance.
-        // Keep the spawn handler alive (do not call api.exit) so PHP can
-        // continue its own teardown without tripping the wasm runtime; just
-        // park here until something else terminates the process.
-        debugLog("stdin idle, parking Scribunto server");
-        await new Promise<void>(() => {
-          /* never resolves */
-        });
+        // Exit so PHP's proc_close() in the engine destructor can complete;
+        // otherwise it would block forever waiting for the spawned lua
+        // process to die.
+        debugLog("stdin idle, exiting Scribunto server");
+        try {
+          lua.global.close();
+        } catch {
+          /* ignore */
+        }
+        api.exit(0);
         return;
       }
       debugLog(`got message op=${msg.op}${
