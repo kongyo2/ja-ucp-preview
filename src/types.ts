@@ -82,6 +82,7 @@ export interface SiteSnapshot {
   readonly extensionTags: string[];
   readonly functionHooks: string[];
   readonly variables: string[];
+  readonly magicWords: string[];
 }
 
 export interface NamespaceInfo {

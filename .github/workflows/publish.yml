@@ -44,19 +44,15 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
           cache: 'npm'
 
-      - name: Setup PHP 8.3
+      # Composer requires a PHP CLI to run; the runtime itself uses PHP/WASM
+      # and does not require PHP at install time.
+      - name: Setup PHP 8.3 (composer only)
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          extensions: intl, mbstring, sqlite3, pdo_sqlite, xml, curl, gd
+          extensions: mbstring, json
           coverage: none
           tools: composer
-
-      - name: Install Lua 5.1
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y lua5.1
-          test -x /usr/bin/lua5.1
 
       - name: Install Node dependencies
         run: npm ci

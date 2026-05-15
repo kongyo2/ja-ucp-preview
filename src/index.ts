@@ -15,16 +15,14 @@ export type {
 export { createJaUcpRenderer, JaUcpRenderer, type JaUcpRendererOptions } from "./renderer.js";
 export {
   ExactMediaWikiSnapshotMissingError,
+  ExactMediaWikiRuntimeError,
   createPhpWasmBackend,
   PhpWasmBackend,
-  type PhpWasmBackendOptions
+  type PhpWasmBackendOptions,
+  type ExternalSpawnHandler,
+  type ExternalSpawnRequest,
+  type ExternalSpawnResult
 } from "./backend/phpWasmBackend.js";
-export {
-  createNativePhpBackend,
-  ExactMediaWikiRuntimeError,
-  NativePhpBackend,
-  type NativePhpBackendOptions
-} from "./backend/nativePhpBackend.js";
 export { jaUncyclopediaSnapshot } from "./site/snapshot.js";
 export {
   jaUncyclopediaDefaultStyleTitles,

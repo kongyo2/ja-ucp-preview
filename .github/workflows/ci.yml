@@ -30,28 +30,27 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Setup PHP 8.3
+      # The renderer runs MediaWiki under PHP/WASM (`@php-wasm/node`) at
+      # runtime, so no system PHP is required to run the test suite. We still
+      # need PHP + composer here to materialize the bundled extensions'
+      # `vendor/` trees, because composer.phar requires a PHP CLI to execute.
+      - name: Setup PHP 8.3 (composer only)
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          extensions: intl, mbstring, sqlite3, pdo_sqlite, xml, curl, gd
+          extensions: mbstring, json
           coverage: none
           tools: composer
-
-      - name: Install Lua 5.1 (Scribunto luastandalone)
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y lua5.1
-          # The renderer hard-codes /usr/bin/lua5.1; verify it exists.
-          test -x /usr/bin/lua5.1
 
       - name: Install Node dependencies
         run: npm ci
 
       - name: Install bundled MediaWiki extension Composer dependencies
-        # TemplateStyles and Wikibase ship without their vendor/ trees in git
-        # because composer install is reproducible. The renderer asserts both
-        # vendor/autoload.php exist before booting MediaWiki.
+        # TemplateStyles and Wikibase ship without their vendor/ trees in git.
+        # The PHP/WASM backend asserts both vendor/autoload.php files exist
+        # before booting MediaWiki, so we populate them here. End-user installs
+        # pick the vendor/ trees up from the published tarball, where empty
+        # .npmignore files override the upstream extensions' .gitignore.
         run: |
           for ext in TemplateStyles Wikibase; do
             ext_dir="vendor/mediawiki-1.39.3/extensions/$ext"
