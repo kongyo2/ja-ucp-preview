@@ -1,6 +1,6 @@
 {
   "name": "@kongyo2/ja-ucp-preview",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Offline Japanese Uncyclopedia preview renderer for TypeScript/Node.js. Bundles MediaWiki 1.39.3 + the parser-affecting Japanese Uncyclopedia extensions and runs them under PHP/WASM (no system PHP required).",
   "type": "module",
   "main": "./dist/index.js",
